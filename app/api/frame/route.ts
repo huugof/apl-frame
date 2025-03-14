@@ -13,20 +13,28 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         
         const pattern = await PatternService.getDailyPattern();
         
+        // Base response with hideSplashScreen set to true
+        const baseResponse = {
+            hideSplashScreen: true
+        };
+        
         // Handle different button actions
         switch (buttonIndex) {
             case 1: // View Pattern
                 return NextResponse.json({
+                    ...baseResponse,
                     pattern,
                 });
             case 2: // Generate Image
                 const imageUrl = await PatternService.generatePatternImage(pattern);
                 return NextResponse.json({
+                    ...baseResponse,
                     pattern,
                     imageUrl,
                 });
             case 3: // Share Pattern
                 return NextResponse.json({
+                    ...baseResponse,
                     message: `Share this pattern: ${pattern.title}`,
                     pattern,
                 });
