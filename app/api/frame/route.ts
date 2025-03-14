@@ -11,7 +11,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const { untrustedData } = data;
         const { buttonIndex } = untrustedData;
         
-        const pattern = await PatternService.getCurrentPattern();
+        const pattern = await PatternService.getDailyPattern();
         
         // Handle different button actions
         switch (buttonIndex) {

@@ -12,6 +12,8 @@ export interface Pattern {
     title: string;
     /** The name of the pattern */
     name: string;
+    /** A brief summary of the pattern */
+    summary: string;
     /** The problem statement */
     problem: string;
     /** The solution statement */

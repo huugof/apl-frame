@@ -15,9 +15,11 @@ async function fetchPatterns(): Promise<void> {
         const samplePattern: Pattern = {
             id: 1,
             title: "INDEPENDENT REGIONS (1)",
+            name: "INDEPENDENT REGIONS",
             summary: "Metropolitan regions will not come to balance until each one is small and autonomous enough to be an independent sphere of culture.",
             problem: "Metropolitan regions are becoming too large and centralized.",
             solution: "Keep regional population within 2-10 million, giving each region substantial political autonomy.",
+            imagePrompt: "A map showing distinct, autonomous metropolitan regions with clear boundaries, sustainable urban planning, aerial view"
         };
         
         patterns.push(samplePattern);
