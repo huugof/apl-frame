@@ -1,0 +1,82 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+.next/
+next-env.d.ts
+
+# Production
+/build
+/dist
+
+# Environment Variables
+.env
+.env*.local
+.env.development
+.env.test
+.env.production
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+
+# PWA files
+**/public/sw.js
+**/public/workbox-*.js
+**/public/worker-*.js
+**/public/sw.js.map
+**/public/workbox-*.js.map
+**/public/worker-*.js.map
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IDE - JetBrains (WebStorm, IntelliJ, etc)
+.idea/
+*.iml
+*.iws
+
+# Logs
+logs
+*.log
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Backup files
+*.bak 
