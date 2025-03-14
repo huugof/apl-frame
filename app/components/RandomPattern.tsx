@@ -7,11 +7,13 @@ import { useState, useEffect } from "react";
 import { Pattern } from "@/app/types";
 import { PatternService } from "@/app/services/pattern.service";
 import PatternCard from "./PatternCard";
+import sdk from "@farcaster/frame-sdk";
 
 export default function RandomPattern() {
   const [pattern, setPattern] = useState<Pattern | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSDKLoaded, setIsSDKLoaded] = useState(false);
 
   const loadPattern = async () => {
     try {
@@ -36,9 +38,26 @@ export default function RandomPattern() {
     }
   };
 
+  // Initialize Frame SDK and load pattern
   useEffect(() => {
-    loadPattern();
-  }, []);
+    const initializeFrame = async () => {
+      try {
+        // Load pattern first
+        await loadPattern();
+        
+        // Initialize Frame SDK
+        if (sdk && !isSDKLoaded) {
+          setIsSDKLoaded(true);
+          // Tell the client we're ready and can hide the splash screen
+          sdk.actions.ready();
+        }
+      } catch (error) {
+        console.error("Failed to initialize frame:", error);
+      }
+    };
+
+    initializeFrame();
+  }, [isSDKLoaded]);
 
   if (!pattern) {
     return <div>Loading pattern...</div>;
