@@ -1,5 +1,18 @@
 {
+  "accountAssociation": {
+    "header": "eyJmaWQiOjEyOTc3LCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4ZDFlMmEzQWIyZDE0NDk0QTA2MjU4YTJjNDE5OGJjMDE3MDg2OTMxRCJ9",
+    "payload": "eyJkb21haW4iOiJhcGwtZnJhbWUudmVyY2VsLmFwcCJ9",
+    "signature": "MHg5YjFlM2I2YzkxNzAwZDQzYzBlYWNhYmQzMGU1MWI5ZTMyOGE0MTZhODI1NmMxMWM4MDMxNmU3ZDI5Mzc1ZmRkNjY0OTZhYzYzOTZkYmZkODUxMjgxNWRmYzdjNDJlMDEwYTNlYjEwZDZjOWE0MzBmMzMwYmJmNmFhYTk2MjgyYTFi"
+  },
   "frame": {
-    "metadata_uri": "/api/frame"
+    "version": "0.0.1",
+    "name": "A Pattern Language Daily",
+    "iconUrl": "https://apl-frame.vercel.app/icon.png",
+    "homeUrl": "https://apl-frame.vercel.app",
+    "imageUrl": "https://apl-frame.vercel.app/image.png",
+    "buttonTitle": "Check this out",
+    "splashImageUrl": "https://apl-frame.vercel.app/splash.png",
+    "splashBackgroundColor": "#eeccff",
+    "webhookUrl": "https://apl-frame.vercel.app/api/webhook"
   }
-} 
+}
