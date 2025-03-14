@@ -22,38 +22,41 @@ export default function PatternCard({ pattern, imageUrl, isLoading, onGenerateIm
   });
 
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
-      <div className="p-8">
-        <div className="text-sm text-gray-500 mb-2">{today}</div>
-        <div className="uppercase tracking-wide text-sm text-indigo-500 font-semibold">
-          Pattern #{pattern.id}
+    <div className="max-w-2xl mx-auto bg-white shadow-md overflow-hidden">
+      {/* Blue gradient section with pattern info */}
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 px-8 py-10">
+        <div className="inline-block px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900 mb-3">
+          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+            Pattern {pattern.id}
+          </span>
         </div>
-        <h2 className="mt-2 text-xl font-bold">{pattern.title}</h2>
-        
+        <h2 className="text-4xl font-normal text-gray-900 dark:text-white tracking-tight font-garamond">
+          {pattern.name}
+        </h2>
+      </div>
+
+      {/* Date display */}
+      <div className="px-8 pt-4 mb-6">
+        <div className="text-sm text-gray-500">{today}</div>
+      </div>
+
+      {/* Pattern content */}
+      <div className="px-8">
         <div className="mt-4">
-          <h3 className="font-semibold text-gray-700">Problem:</h3>
-          <div className="mt-1 text-gray-600">
+          <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400">Problem:</h3>
+          <div className="mt-2 pl-4 text-gray-700 dark:text-gray-300 prose prose-gray dark:prose-invert border-l-2 border-gray-100 dark:border-gray-700">
             <ReactMarkdown>{pattern.problem}</ReactMarkdown>
           </div>
         </div>
 
-        <div className="mt-4">
-          <h3 className="font-semibold text-gray-700">Solution:</h3>
-          <div className="mt-1 text-gray-600">
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400">Solution:</h3>
+          <div className="mt-2 pl-4 text-gray-700 dark:text-gray-300 prose prose-gray dark:prose-invert border-l-2 border-gray-100 dark:border-gray-700">
             <ReactMarkdown>{pattern.solution}</ReactMarkdown>
           </div>
         </div>
 
-        {pattern.relatedPatterns && (
-          <div className="mt-4">
-            <h3 className="font-semibold text-gray-700">Related Patterns:</h3>
-            <div className="mt-1 text-gray-600">
-              <ReactMarkdown>{pattern.relatedPatterns}</ReactMarkdown>
-            </div>
-          </div>
-        )}
-
-        <div className="mt-6">
+        <div className="mt-6 pb-8">
           {imageUrl ? (
             <div className="relative h-64 w-full">
               <Image
