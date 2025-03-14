@@ -1,0 +1,11 @@
+a farcaster v2 frame based on Christopher Alexander's "A Pattern Language"
+
+Functionality 
+- select a random pattern from the book every day
+- summarize the pattern
+- generate an image to describe the solution
+- send a notification to the user to check today's pattern
+
+Resources:
+- Frames v2 specifications: https://docs.farcaster.xyz/developers/frames/v2/spec
+- A Pattern Language Patterns: https://github.com/zenodotus280/apl-md/tree/70c6d6e7d3c54284724b1cacdf0590bf530c9eaa/Patterns
