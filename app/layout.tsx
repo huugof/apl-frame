@@ -21,11 +21,12 @@ const garamond = EB_Garamond({
 const frameEmbed = {
   version: "next",
   imageUrl: `${appUrl}/start.png`,
+  iconUrl: `${appUrl}/splash.png`,
   button: {
-    title: "Launch Pattern",
+    title: "Launch Today's Pattern",
     action: {
       type: "launch_frame",
-      name: "A Pattern Language Daily",
+      name: "APL Daily",
       url: `${appUrl}`,
       splashImageUrl: `${appUrl}/splash.png`,
       splashBackgroundColor: "#eeccff",
