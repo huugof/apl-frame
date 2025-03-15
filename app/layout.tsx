@@ -21,7 +21,6 @@ const garamond = EB_Garamond({
 const frameEmbed = {
   version: "next",
   imageUrl: `${appUrl}/start.png`,
-  iconUrl: `${appUrl}/splash.png`,
   button: {
     title: "Launch Today's Pattern",
     action: {
@@ -35,9 +34,9 @@ const frameEmbed = {
 };
 
 export const metadata: Metadata = {
-  title: "A Pattern Language Daily",
+  title: "APL Daily 2",
   openGraph: {
-    title: "A Pattern Language Daily",
+    title: "APL Daily 3",
     description: "Daily patterns from Christopher Alexander's A Pattern Language"
   },
   other: {
