@@ -6,11 +6,11 @@
   },
   "frame": {
     "version": "0.0.1",
-    "name": "A Pattern Language Daily",
-    "iconUrl": "https://apl-frame.vercel.app/icon.png",
+    "name": "APL Daily",
+    "iconUrl": "https://apl-frame.vercel.app/splash.png",
     "homeUrl": "https://apl-frame.vercel.app",
     "imageUrl": "https://apl-frame.vercel.app/image.png",
-    "buttonTitle": "Check this out",
+    "buttonTitle": "Launch Today's Pattern",
     "splashImageUrl": "https://apl-frame.vercel.app/splash.png",
     "splashBackgroundColor": "#eeccff",
     "webhookUrl": "https://apl-frame.vercel.app/api/webhook"
