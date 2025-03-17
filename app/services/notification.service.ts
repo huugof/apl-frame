@@ -64,6 +64,12 @@ export class NotificationService {
    * Send a notification to Farcaster
    */
   public static async sendNotification(config: NotificationConfig): Promise<void> {
+    console.log("Notification config:", {
+        url: config.url,
+        channelId: config.channelId,
+        text: config.text,
+        buttonText: config.buttonText
+    });
     // Check if we already sent a notification today
     if (await this.wasNotificationSentToday()) {
       console.log("Notification already sent today");
@@ -87,14 +93,21 @@ export class NotificationService {
           "Authorization": `Bearer ${notificationToken}`
         },
         body: JSON.stringify({
-          notificationId: `pattern-${Date.now()}`,
-          title: "New Pattern Available",
-          body: config.text,
-          targetUrl: config.url,
+          channelId: config.channelId,
+          url: config.url,
+          text: config.text,
+          button: config.buttonText ? {
+            text: config.buttonText
+          } : undefined,
+          image: config.imageUrl ? {
+            url: config.imageUrl
+          } : undefined
         })
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Notification API response:", errorText);
         throw new Error(`Failed to send notification: ${response.statusText}`);
       }
 
