@@ -8,7 +8,8 @@ export class PatternService {
      * Get the pattern for today
      */
     public static async getDailyPattern(): Promise<Pattern> {
-        const response = await fetch("/api/patterns");
+        const host = process.env.NEXT_PUBLIC_HOST || "https://apl-frame.vercel.app";
+        const response = await fetch(`${host}/api/patterns`);
         if (!response.ok) {
             throw new Error("Failed to fetch daily pattern");
         }
