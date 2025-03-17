@@ -1,48 +1,47 @@
-import { NextRequest, NextResponse } from "next/server";
-import { notificationManager, CreateNotificationParams } from "../../../lib/notifs";
+import { notificationDetailsSchema } from "@farcaster/frame-sdk";
+import { NextRequest } from "next/server";
 import { z } from "zod";
+import { setUserNotificationDetails } from "@/lib/kv";
+import { sendFrameNotification } from "@/lib/notifs";
 
-/**
- * Request body schema validation
- */
-const NotificationRequestSchema = z.object({
-  userId: z.string().min(1),
-  message: z.string().min(1),
-  type: z.enum(["success", "error", "info", "warning"]),
-  metadata: z.record(z.unknown()).optional(),
+const requestSchema = z.object({
+  fid: z.number(),
+  notificationDetails: notificationDetailsSchema,
 });
 
-/**
- * POST /api/send-notification
- * Sends a notification to a specific user
- */
-export async function POST(request: NextRequest): Promise<NextResponse> {
-  try {
-    const body = await request.json();
-    
-    // Validate request body
-    const validationResult = NotificationRequestSchema.safeParse(body);
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: validationResult.error },
-        { status: 400 }
-      );
-    }
+export async function POST(request: NextRequest) {
+  const requestJson = await request.json();
+  const requestBody = requestSchema.safeParse(requestJson);
 
-    const notificationParams: CreateNotificationParams = validationResult.data;
-    
-    // Create the notification
-    const notification = await notificationManager.createNotification(notificationParams);
-
-    return NextResponse.json(
-      { message: "Notification sent successfully", notification },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error("Error sending notification:", error);
-    return NextResponse.json(
-      { error: "Failed to send notification" },
-      { status: 500 }
+  if (requestBody.success === false) {
+    return Response.json(
+      { success: false, errors: requestBody.error.errors },
+      { status: 400 }
     );
   }
-} 
+
+  await setUserNotificationDetails(
+    requestBody.data.fid,
+    requestBody.data.notificationDetails
+  );
+
+  const sendResult = await sendFrameNotification({
+    fid: requestBody.data.fid,
+    title: "Test notification",
+    body: "Sent at " + new Date().toISOString(),
+  });
+
+  if (sendResult.state === "error") {
+    return Response.json(
+      { success: false, error: sendResult.error },
+      { status: 500 }
+    );
+  } else if (sendResult.state === "rate_limit") {
+    return Response.json(
+      { success: false, error: "Rate limited" },
+      { status: 429 }
+    );
+  }
+
+  return Response.json({ success: true });
+}
