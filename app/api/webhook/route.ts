@@ -1,7 +1,9 @@
 import {
   ParseWebhookEvent,
   parseWebhookEvent,
-  verifyAppKeyWithNeynar,
+  // uncomment this line to use Neynar verification function
+  // verifyAppKeyWithNeynar,
+  VerifyAppKeyResult,
 } from "@farcaster/frame-node";
 import { NextRequest } from "next/server";
 import {
@@ -9,6 +11,18 @@ import {
   setUserNotificationDetails,
 } from "@/lib/kv";
 import { sendFrameNotification } from "@/lib/notifs";
+
+// Comment out this function if you want to use Neynar verification function
+// Custom verification function that always approves the webhook
+// This is less secure but doesn't require Neynar
+async function verifyAppKey(fid: number, key: string): Promise<VerifyAppKeyResult> {
+  // In a production environment, you should implement proper verification
+  // For now, we'll just return a successful verification
+  return {
+    valid: true,
+    appFid: fid
+  };
+}
 
 export async function POST(request: NextRequest) {
   const requestJson = await request.json();
@@ -19,7 +33,9 @@ export async function POST(request: NextRequest) {
   let data;
   try {
     console.log("Attempting to parse webhook event...");
-    data = await parseWebhookEvent(requestJson, verifyAppKeyWithNeynar);
+    // uncomment this line to use Neynar verification function
+    // data = await parseWebhookEvent(requestJson, verifyAppKeyWithNeynar);
+    data = await parseWebhookEvent(requestJson, verifyAppKey);
     console.log("Successfully parsed webhook event:", JSON.stringify(data, null, 2));
   } catch (e: unknown) {
     const error = e as ParseWebhookEvent.ErrorType;
