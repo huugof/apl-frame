@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { start } from 'repl';
 
-const appUrl = process.env.NEXT_PUBLIC_HOST
+const appUrl = process.env.NEXT_PUBLIC_URL
 
 const inter = Inter({
   subsets: ['latin'],
@@ -28,15 +28,15 @@ const frameEmbed = {
       name: "APL Daily",
       url: `${appUrl}`,
       splashImageUrl: `${appUrl}/splash.png`,
-      splashBackgroundColor: "#eeccff",
+      splashBackgroundColor: "#e2e2e2",
     },
   },
 };
 
 export const metadata: Metadata = {
-  title: "APL Daily 2",
+  title: "APL Daily",
   openGraph: {
-    title: "APL Daily 3",
+    title: "APL Daily",
     description: "Daily patterns from Christopher Alexander's A Pattern Language"
   },
   other: {
