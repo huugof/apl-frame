@@ -78,8 +78,8 @@ export async function POST(request: NextRequest) {
           console.log("Sending welcome notification...");
           await sendFrameNotification({
             fid,
-            title: "Welcome to Frames v2",
-            body: "Frame is now added to your client",
+            title: "A Pattern Languange Daily",
+            body: "You're all set to receive daily patterns!",
           });
         } else {
           console.log("No notification details, deleting...");
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
         await sendFrameNotification({
           fid,
           title: "Ding ding ding",
-          body: "Notifications are now enabled",
+          body: "Patterns are incoming!",
         });
         break;
 
