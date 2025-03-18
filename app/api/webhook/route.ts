@@ -18,9 +18,12 @@ export async function POST(request: NextRequest) {
 
   let data;
   try {
+    console.log("Attempting to parse webhook event...");
     data = await parseWebhookEvent(requestJson, verifyAppKeyWithNeynar);
+    console.log("Successfully parsed webhook event:", JSON.stringify(data, null, 2));
   } catch (e: unknown) {
     const error = e as ParseWebhookEvent.ErrorType;
+    console.error("Error parsing webhook event:", error);
 
     switch (error.name) {
       case "VerifyJsonFarcasterSignature.InvalidDataError":
@@ -47,39 +50,56 @@ export async function POST(request: NextRequest) {
 
   const fid = data.fid;
   const event = data.event;
+  console.log("Processing event type:", event.event, "for fid:", fid);
 
-  switch (event.event) {
-    case "frame_added":
-      if (event.notificationDetails) {
+  try {
+    switch (event.event) {
+      case "frame_added":
+        console.log("Processing frame_added event");
+        if (event.notificationDetails) {
+          console.log("Notification details present, saving...");
+          await setUserNotificationDetails(fid, event.notificationDetails);
+          console.log("Sending welcome notification...");
+          await sendFrameNotification({
+            fid,
+            title: "Welcome to Frames v2",
+            body: "Frame is now added to your client",
+          });
+        } else {
+          console.log("No notification details, deleting...");
+          await deleteUserNotificationDetails(fid);
+        }
+        break;
+
+      case "frame_removed":
+        console.log("Processing frame_removed event");
+        await deleteUserNotificationDetails(fid);
+        break;
+
+      case "notifications_enabled":
+        console.log("Processing notifications_enabled event");
         await setUserNotificationDetails(fid, event.notificationDetails);
+        console.log("Sending notification enabled confirmation...");
         await sendFrameNotification({
           fid,
-          title: "Welcome to Frames v2",
-          body: "Frame is now added to your client",
+          title: "Ding ding ding",
+          body: "Notifications are now enabled",
         });
-      } else {
+        break;
+
+      case "notifications_disabled":
+        console.log("Processing notifications_disabled event");
         await deleteUserNotificationDetails(fid);
-      }
+        break;
+    }
 
-      break;
-    case "frame_removed":
-      await deleteUserNotificationDetails(fid);
-
-      break;
-    case "notifications_enabled":
-      await setUserNotificationDetails(fid, event.notificationDetails);
-      await sendFrameNotification({
-        fid,
-        title: "Ding ding ding",
-        body: "Notifications are now enabled",
-      });
-
-      break;
-    case "notifications_disabled":
-      await deleteUserNotificationDetails(fid);
-
-      break;
+    console.log("Successfully processed webhook event");
+    return Response.json({ success: true });
+  } catch (error) {
+    console.error("Error processing webhook event:", error);
+    return Response.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
-
-  return Response.json({ success: true });
 }
