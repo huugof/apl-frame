@@ -12,6 +12,9 @@ import { sendFrameNotification } from "@/lib/notifs";
 
 export async function POST(request: NextRequest) {
   const requestJson = await request.json();
+  
+  // Log the incoming webhook payload for debugging
+  console.log("Incoming webhook payload:", JSON.stringify(requestJson, null, 2));
 
   let data;
   try {
