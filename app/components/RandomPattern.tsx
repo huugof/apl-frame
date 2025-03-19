@@ -83,6 +83,7 @@ export default function RandomPattern() {
    */
   const saveNotificationDetails = async (details: NotificationDetails) => {
     try {
+      console.log("[Frame] Saving notification details...");
       const response = await fetch("/api/notifications/save", {
         method: "POST",
         headers: {
@@ -90,11 +91,16 @@ export default function RandomPattern() {
         },
         body: JSON.stringify(details),
       });
+      
       if (!response.ok) {
-        throw new Error("Failed to save notification details");
+        const errorData = await response.json();
+        throw new Error(`Failed to save notification details: ${errorData.error || response.status}`);
       }
+      
+      console.log("[Frame] Successfully saved notification details");
     } catch (error) {
-      console.error("Error saving notification details:", error);
+      console.error("[Frame] Error saving notification details:", error);
+      // Don't throw here, just log the error
     }
   };
 
@@ -158,14 +164,19 @@ export default function RandomPattern() {
           setIsSDKLoaded(true);
 
           // Set up event listeners
-          sdk.on("frameAdded", ({ notificationDetails }) => {
+          sdk.on("frameAdded", async ({ notificationDetails }) => {
+            console.log("[Frame] Frame added event received");
             setHasAddedFrame(true);
             if (notificationDetails) {
-              saveNotificationDetails(notificationDetails);
+              console.log("[Frame] Notification details received, saving...");
+              await saveNotificationDetails(notificationDetails);
+            } else {
+              console.log("[Frame] No notification details received");
             }
           });
 
           sdk.on("frameRemoved", () => {
+            console.log("[Frame] Frame removed event received");
             setHasAddedFrame(false);
           });
 
@@ -176,7 +187,7 @@ export default function RandomPattern() {
           promptAddFrame();
         }
       } catch (error) {
-        console.error("Failed to initialize frame:", error);
+        console.error("[Frame] Failed to initialize frame:", error);
       }
     };
 
