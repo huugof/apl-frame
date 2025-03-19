@@ -56,8 +56,8 @@ export default function PatternCard({ pattern, imageUrl, isLoading, onGenerateIm
           </div>
         </div>
 
-        <div className="mt-6 pb-8">
-          {imageUrl ? (
+        <div className="mt-6">
+          {imageUrl && (
             <div className="relative h-64 w-full">
               <Image
                 src={imageUrl}
@@ -66,14 +66,6 @@ export default function PatternCard({ pattern, imageUrl, isLoading, onGenerateIm
                 className="object-cover rounded-lg"
               />
             </div>
-          ) : (
-            <button
-              onClick={onGenerateImage}
-              disabled={isLoading}
-              className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400"
-            >
-              {isLoading ? "Generating image..." : "Generate visualization"}
-            </button>
           )}
         </div>
       </div>

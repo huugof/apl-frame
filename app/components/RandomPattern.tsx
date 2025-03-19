@@ -134,6 +134,19 @@ export default function RandomPattern() {
     };
   }, [isSDKLoaded]);
 
+  useEffect(() => {
+    // Load pattern immediately
+    loadPattern();
+
+    // Set up interval to check every minute (60000 milliseconds)
+    const interval = setInterval(() => {
+      loadPattern();
+    }, 60000);
+
+    // Clean up interval on unmount
+    return () => clearInterval(interval);
+  }, []); // Empty dependency array means this only runs once on mount
+
   if (!pattern) {
     return <div>Loading pattern...</div>;
   }

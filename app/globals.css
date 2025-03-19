@@ -7,14 +7,23 @@
   --background: #fff;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground: #fff;
-    --background: #000;
-  }
+html {
+  height: 100%;
+  background-color: white;
 }
 
 body {
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
   color: var(--foreground);
   background: var(--background);
+  /* Add padding for devices with safe-area-inset */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Ensure white background extends to the bottom on mobile */
+#__next {
+  min-height: 100%;
+  background-color: white;
 }

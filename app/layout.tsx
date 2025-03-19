@@ -40,7 +40,9 @@ export const metadata: Metadata = {
     description: "Daily patterns from Christopher Alexander's A Pattern Language"
   },
   other: {
-    "fc:frame": JSON.stringify(frameEmbed)
+    "fc:frame": JSON.stringify(frameEmbed),
+    "viewport": "width=device-width, initial-scale=1, viewport-fit=cover",
+    "theme-color": "#ffffff"
   },
 };
 
@@ -50,8 +52,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${garamond.variable} antialiased`}>
-      <body className={inter.className}>{children}</body>
+    <html lang="en" className={`${inter.variable} ${garamond.variable} antialiased h-full`}>
+      <body className={`${inter.className} min-h-full bg-white`}>{children}</body>
     </html>
   );
 }

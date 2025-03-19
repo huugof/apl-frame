@@ -47,20 +47,9 @@ async function parseAllPatterns(): Promise<ExtendedPattern[]> {
   // Write the parsed patterns to the data file
   const outputPath = path.join(process.cwd(), "app", "data", "patterns.ts");
   const outputContent = `/**
- * Represents a single architectural pattern from A Pattern Language
- */
-export interface Pattern {
-  id: number;
-  name: string;
-  problem: string;
-  solution: string;
-  imagePrompt: string;
-}
-
-/**
  * Collection of patterns from Christopher Alexander's A Pattern Language
  */
-export const patterns: Pattern[] = ${JSON.stringify(patterns, null, 2)};
+export const patterns = ${JSON.stringify(patterns, null, 2)};
 `;
 
   fs.writeFileSync(outputPath, outputContent);

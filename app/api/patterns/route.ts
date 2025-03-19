@@ -3,26 +3,38 @@ import { Pattern } from "@/app/types";
 import { patterns } from "@/app/data/patterns";
 
 /**
- * Get the daily pattern based on the current date
+ * Get the daily pattern based on the current UTC date
+ * The pattern changes at midnight UTC each day
  */
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
 export async function GET() {
   try {
-    // Get today's date and use it to generate a consistent index
-    const today = new Date();
-    const dateString = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
-    const hash = Array.from(dateString).reduce((acc, char) => {
-      return char.charCodeAt(0) + ((acc << 5) - acc);
-    }, 0);
-    
-    // Use the hash to select a pattern
-    const index = Math.abs(hash) % patterns.length;
+    const now = new Date();
+    // Create a seed from the current minute
+    const minutes = Math.floor(now.getTime() / (1000 * 60));
+    // Use seeded random to get a consistent but random-looking index
+    const randomValue = seededRandom(minutes);
+    const index = Math.floor(randomValue * patterns.length);
     const pattern = patterns[index];
 
-    return NextResponse.json({ pattern });
-  } catch (error) {
-    console.error("Failed to get daily pattern:", error);
     return NextResponse.json(
-      { error: "Failed to get daily pattern" },
+      { pattern },
+      {
+        headers: {
+          "Cache-Control": "no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0",
+        },
+      }
+    );
+  } catch (error) {
+    console.error("Failed to get pattern:", error);
+    return NextResponse.json(
+      { error: "Failed to get pattern" },
       { status: 500 }
     );
   }
