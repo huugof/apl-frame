@@ -24,6 +24,9 @@ export default function RandomPattern() {
   const [pattern, setPattern] = useState<Pattern | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentMinute, setCurrentMinute] = useState(() => 
+    Math.floor(new Date().getTime() / (1000 * 60))
+  );
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [hasAddedFrame, setHasAddedFrame] = useState(false);
 
@@ -134,18 +137,25 @@ export default function RandomPattern() {
     };
   }, [isSDKLoaded]);
 
+  // Check for minute changes
   useEffect(() => {
-    // Load pattern immediately
+    const checkMinute = () => {
+      const newMinute = Math.floor(new Date().getTime() / (1000 * 60));
+      if (newMinute !== currentMinute) {
+        setCurrentMinute(newMinute);
+        loadPattern();
+      }
+    };
+
+    // Check every second for minute changes
+    const intervalId = setInterval(checkMinute, 1000);
+
+    // Initial load
     loadPattern();
 
-    // Set up interval to check every minute (60000 milliseconds)
-    const interval = setInterval(() => {
-      loadPattern();
-    }, 60000);
-
-    // Clean up interval on unmount
-    return () => clearInterval(interval);
-  }, []); // Empty dependency array means this only runs once on mount
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
+  }, [currentMinute]); // Only re-run if currentMinute changes
 
   if (!pattern) {
     return <div>Loading pattern...</div>;
