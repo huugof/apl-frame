@@ -22,7 +22,7 @@ export default function PatternCard({ pattern, imageUrl, isLoading, onGenerateIm
   });
 
   return (
-    <div className="max-w-2xl mx-auto bg-white shadow-md overflow-hidden">
+    <div className="max-w-2xl mx-auto bg-white overflow-hidden">
       {/* Blue gradient section with pattern info */}
       <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 px-8 py-10">
         <div className="inline-block px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900 mb-3">

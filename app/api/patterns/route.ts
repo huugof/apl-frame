@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { Pattern } from "@/app/types";
 import { patterns } from "@/app/data/patterns";
 
+// Tell Next.js this is a dynamic route
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 /**
  * Get the daily pattern based on the current UTC date
  * The pattern changes at midnight UTC each day
@@ -14,18 +18,15 @@ function seededRandom(seed: number): number {
 export async function GET() {
   try {
     const now = new Date();
-    // Create a seed from the current minute
     const minutes = Math.floor(now.getTime() / (1000 * 60));
-    // Use seeded random to get a consistent but random-looking index
-    const randomValue = seededRandom(minutes);
-    const index = Math.floor(randomValue * patterns.length);
+    const index = minutes % patterns.length;
     const pattern = patterns[index];
 
     return NextResponse.json(
       { pattern },
       {
         headers: {
-          "Cache-Control": "no-store, must-revalidate",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
           "Pragma": "no-cache",
           "Expires": "0",
         },
