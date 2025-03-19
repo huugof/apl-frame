@@ -29,6 +29,28 @@ export async function getUserNotificationDetails(
   }
 }
 
+export async function getAllUsersWithNotifications(): Promise<Array<{ fid: number; details: FrameNotificationDetails }>> {
+  try {
+    // Get all keys matching the pattern
+    const keys = await redis.keys("apl-daily:user:*");
+    const users: Array<{ fid: number; details: FrameNotificationDetails }> = [];
+
+    // Get notification details for each user
+    for (const key of keys) {
+      const fid = parseInt(key.split(":")[2], 10);
+      const details = await redis.get<FrameNotificationDetails>(key);
+      if (details) {
+        users.push({ fid, details });
+      }
+    }
+
+    return users;
+  } catch (error) {
+    console.error("Error getting all users with notifications:", error);
+    return [];
+  }
+}
+
 export async function setUserNotificationDetails(
   fid: number,
   notificationDetails: FrameNotificationDetails

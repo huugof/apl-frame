@@ -8,6 +8,7 @@ import { Pattern } from "@/app/types";
 import { PatternService } from "@/app/services/pattern.service";
 import PatternCard from "./PatternCard";
 import sdk from "@farcaster/frame-sdk";
+import { sendFrameNotification } from "@/lib/notifs";
 
 interface NotificationDetails {
   url: string;
@@ -97,6 +98,41 @@ export default function RandomPattern() {
     }
   };
 
+  /**
+   * Send notification when a new pattern is available
+   */
+  const sendNewPatternNotification = async (newPattern: Pattern) => {
+    try {
+      // Skip notification sending during static generation
+      if (typeof window === "undefined") {
+        return;
+      }
+
+      const response = await fetch("/api/notifications/users", {
+        method: "GET",
+        // Add cache: 'no-store' to ensure we get fresh data
+        cache: "no-store",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to get notification users");
+      }
+      
+      const users = await response.json();
+      
+      // Send notification to each user
+      for (const user of users) {
+        await sendFrameNotification({
+          fid: user.fid,
+          title: "New Pattern Available",
+          body: `A new pattern is available: ${newPattern.title}`,
+        });
+      }
+    } catch (error) {
+      console.error("Error sending notifications:", error);
+    }
+  };
+
   // Initialize Frame SDK and load pattern
   useEffect(() => {
     const initializeFrame = async () => {
@@ -147,6 +183,8 @@ export default function RandomPattern() {
       const latestPattern = await PatternService.getDailyPattern();
       if (pattern && latestPattern.id !== pattern.id) {
         setNewPatternAvailable(true);
+        // Send notification when new pattern is available
+        await sendNewPatternNotification(latestPattern);
       }
     } catch (error) {
       console.error("Failed to check for new pattern:", error);
