@@ -19,6 +19,12 @@ interface AddFrameResult {
   added: boolean;
   notificationDetails?: NotificationDetails;
   reason?: string;
+  fid?: number;
+}
+
+interface FrameEvent {
+  notificationDetails?: NotificationDetails;
+  fid?: number;
 }
 
 export default function RandomPattern() {
@@ -67,8 +73,8 @@ export default function RandomPattern() {
       if (result.added) {
         setHasAddedFrame(true);
         // Save notification details if provided
-        if (result.notificationDetails) {
-          await saveNotificationDetails(result.notificationDetails);
+        if (result.notificationDetails && result.fid) {
+          await saveNotificationDetails(result.notificationDetails, result.fid);
         }
       } else if (result.reason) {
         console.log("Frame not added:", result.reason);
@@ -81,13 +87,14 @@ export default function RandomPattern() {
   /**
    * Save notification details to your backend
    */
-  const saveNotificationDetails = async (details: NotificationDetails) => {
+  const saveNotificationDetails = async (details: NotificationDetails, fid: number) => {
     try {
-      console.log("[Frame] Saving notification details...");
+      console.log(`[Frame] Saving notification details for user ${fid}...`);
       const response = await fetch("/api/notifications/save", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-farcaster-fid": fid.toString(),
         },
         body: JSON.stringify(details),
       });
@@ -164,14 +171,14 @@ export default function RandomPattern() {
           setIsSDKLoaded(true);
 
           // Set up event listeners
-          sdk.on("frameAdded", async ({ notificationDetails }) => {
+          sdk.on("frameAdded", async (event: FrameEvent) => {
             console.log("[Frame] Frame added event received");
             setHasAddedFrame(true);
-            if (notificationDetails) {
-              console.log("[Frame] Notification details received, saving...");
-              await saveNotificationDetails(notificationDetails);
+            if (event.notificationDetails && event.fid) {
+              console.log(`[Frame] Notification details received for user ${event.fid}, saving...`);
+              await saveNotificationDetails(event.notificationDetails, event.fid);
             } else {
-              console.log("[Frame] No notification details received");
+              console.log("[Frame] No notification details or FID received");
             }
           });
 
