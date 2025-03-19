@@ -105,28 +105,41 @@ export default function RandomPattern() {
     try {
       // Skip notification sending during static generation
       if (typeof window === "undefined") {
+        console.log("Skipping notification during static generation");
         return;
       }
 
+      console.log("Fetching users with notifications...");
       const response = await fetch("/api/notifications/users", {
         method: "GET",
-        // Add cache: 'no-store' to ensure we get fresh data
         cache: "no-store",
       });
       
       if (!response.ok) {
-        throw new Error("Failed to get notification users");
+        throw new Error(`Failed to get notification users: ${response.status}`);
       }
       
       const users = await response.json();
+      console.log(`Found ${users.length} users to notify`);
       
       // Send notification to each user
       for (const user of users) {
-        await sendFrameNotification({
+        console.log(`Sending notification to user ${user.fid}...`);
+        const result = await sendFrameNotification({
           fid: user.fid,
           title: "New Pattern Available",
           body: `A new pattern is available: ${newPattern.title}`,
         });
+        
+        if (result.state === "success") {
+          console.log(`Successfully sent notification to user ${user.fid}`);
+        } else if (result.state === "no_token") {
+          console.log(`No notification token found for user ${user.fid}`);
+        } else if (result.state === "rate_limit") {
+          console.log(`Rate limited when sending to user ${user.fid}`);
+        } else {
+          console.error(`Failed to send notification to user ${user.fid}:`, result.error);
+        }
       }
     } catch (error) {
       console.error("Error sending notifications:", error);
@@ -180,11 +193,18 @@ export default function RandomPattern() {
   // Check for new patterns without loading them
   const checkForNewPattern = async () => {
     try {
+      console.log("Checking for new pattern...");
       const latestPattern = await PatternService.getDailyPattern();
+      console.log("Latest pattern:", latestPattern);
+      console.log("Current pattern:", pattern);
+      
       if (pattern && latestPattern.id !== pattern.id) {
+        console.log("New pattern detected! Sending notifications...");
         setNewPatternAvailable(true);
         // Send notification when new pattern is available
         await sendNewPatternNotification(latestPattern);
+      } else {
+        console.log("No new pattern available");
       }
     } catch (error) {
       console.error("Failed to check for new pattern:", error);
