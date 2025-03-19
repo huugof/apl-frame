@@ -29,11 +29,15 @@ export default function RandomPattern() {
   );
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [hasAddedFrame, setHasAddedFrame] = useState(false);
+  const [newPatternAvailable, setNewPatternAvailable] = useState(false);
 
   const loadPattern = async () => {
     try {
       const dailyPattern = await PatternService.getDailyPattern();
       setPattern(dailyPattern);
+      setNewPatternAvailable(false);
+      // Reset image when pattern changes
+      setImageUrl(null);
     } catch (error) {
       console.error("Failed to load pattern:", error);
     }
@@ -137,13 +141,25 @@ export default function RandomPattern() {
     };
   }, [isSDKLoaded]);
 
+  // Check for new patterns without loading them
+  const checkForNewPattern = async () => {
+    try {
+      const latestPattern = await PatternService.getDailyPattern();
+      if (pattern && latestPattern.id !== pattern.id) {
+        setNewPatternAvailable(true);
+      }
+    } catch (error) {
+      console.error("Failed to check for new pattern:", error);
+    }
+  };
+
   // Check for minute changes
   useEffect(() => {
     const checkMinute = () => {
       const newMinute = Math.floor(new Date().getTime() / (1000 * 60));
       if (newMinute !== currentMinute) {
         setCurrentMinute(newMinute);
-        loadPattern();
+        checkForNewPattern();
       }
     };
 
@@ -151,22 +167,36 @@ export default function RandomPattern() {
     const intervalId = setInterval(checkMinute, 1000);
 
     // Initial load
-    loadPattern();
+    if (!pattern) {
+      loadPattern();
+    }
 
     // Cleanup interval on unmount
     return () => clearInterval(intervalId);
-  }, [currentMinute]); // Only re-run if currentMinute changes
+  }, [currentMinute, pattern]);
 
   if (!pattern) {
     return <div>Loading pattern...</div>;
   }
 
   return (
-    <PatternCard
-      pattern={pattern}
-      imageUrl={imageUrl}
-      isLoading={isLoading}
-      onGenerateImage={generatePatternImage}
-    />
+    <div className="relative">
+      {newPatternAvailable && (
+        <button
+          onClick={loadPattern}
+          className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 
+                   px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded-full shadow-lg
+                   hover:bg-blue-600 transition-colors"
+        >
+          New pattern available
+        </button>
+      )}
+      <PatternCard
+        pattern={pattern}
+        imageUrl={imageUrl}
+        isLoading={isLoading}
+        onGenerateImage={generatePatternImage}
+      />
+    </div>
   );
 } 
