@@ -114,38 +114,33 @@ export default function RandomPattern() {
   /**
    * Send notification when a new pattern is available
    */
-  const sendNewPatternNotification = async (newPattern: Pattern) => {
+  const sendNewPatternNotification = async (pattern: Pattern) => {
     try {
-      // Skip notification sending during static generation
-      if (typeof window === "undefined") {
-        console.log("Skipping notification during static generation");
-        return;
-      }
-
-      console.log("Sending new pattern notification...");
+      console.log("[NOTIF] Sending new pattern notification");
       const response = await fetch("/api/send-notification", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          fid: 1, // Replace with your FID for testing
+          fid: 1234, // Replace with actual FID
           notificationDetails: {
-            url: window.location.origin,
-            token: "test-token" // This will be replaced by the server with the actual token
-          }
+            url: "https://api.warpcast.com/v1/frame-notifications", // Default URL
+            token: "", // Token will be set by the server
+          },
         }),
       });
-      
+
       if (!response.ok) {
-        throw new Error(`Failed to send notification: ${response.status}`);
+        const errorData = await response.json();
+        console.error("[NOTIF] Failed to send notification:", errorData);
+        return;
       }
-      
-      const result = await response.json();
-      console.log("[Pattern] Notification sent:", result);
-      
+
+      const data = await response.json();
+      console.log("[NOTIF] Notification sent successfully:", data);
     } catch (error) {
-      console.error("Error sending notifications:", error);
+      console.error("[NOTIF] Error sending notification:", error);
     }
   };
 
@@ -232,12 +227,19 @@ export default function RandomPattern() {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                data: {
-                  fid: 1 // Replace with your FID for testing
+                fid: 1, // Replace with your FID for testing
+                notificationDetails: {
+                  url: window.location.origin,
+                  token: "test-token" // This will be replaced by the server with the actual token
                 }
               }),
             });
-            console.log("[Pattern] Test notification response:", await testResponse.json());
+            const testResult = await testResponse.json();
+            console.log("[Pattern] Test notification response:", testResult);
+            
+            if (!testResponse.ok) {
+              throw new Error(`Test notification failed: ${testResult.error || testResponse.status}`);
+            }
           } catch (error) {
             console.error("[Pattern] Test notification failed:", error);
           }

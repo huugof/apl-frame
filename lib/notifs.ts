@@ -5,6 +5,7 @@ import {
 import { getUserNotificationDetails } from "@/lib/kv";
 
 const appUrl = process.env.NEXT_PUBLIC_URL || "";
+const notificationUrl = process.env.FARCASTER_NOTIFICATION_URL || "https://api.warpcast.com/v1/frame-notifications";
 
 type SendFrameNotificationResult =
   | {
@@ -35,7 +36,7 @@ export async function sendFrameNotification({
   }
 
   console.log(`[NOTIF] Found notification details for user ${fid}`);
-  console.log(`[NOTIF] Notification URL: ${notificationDetails.url}`);
+  console.log(`[NOTIF] Notification URL: ${notificationUrl}`);
   console.log(`[NOTIF] Token present: ${!!notificationDetails.token}`);
 
   const notificationRequest = {
@@ -52,10 +53,11 @@ export async function sendFrameNotification({
   });
 
   try {
-    const response = await fetch(notificationDetails.url, {
+    const response = await fetch(notificationUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.FARCASTER_NOTIFICATION_TOKEN}`
       },
       body: JSON.stringify(notificationRequest),
     });

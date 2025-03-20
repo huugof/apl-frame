@@ -26,8 +26,15 @@ export async function POST(request: NextRequest) {
     const { fid, notificationDetails } = requestBody.data;
     console.log(`[API] Sending test notification to user ${fid}`);
 
+    // Override notification details with environment variables
+    const updatedNotificationDetails = {
+      ...notificationDetails,
+      url: process.env.FARCASTER_NOTIFICATION_URL || "https://api.warpcast.com/v1/frame-notifications",
+      token: process.env.FARCASTER_NOTIFICATION_TOKEN || "",
+    };
+
     // Save notification details
-    await setUserNotificationDetails(fid, notificationDetails);
+    await setUserNotificationDetails(fid, updatedNotificationDetails);
 
     // Send test notification
     const sendResult = await sendFrameNotification({
