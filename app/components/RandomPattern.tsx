@@ -169,7 +169,7 @@ export default function RandomPattern() {
             },
             body: JSON.stringify({
               fid: user.fid,
-              notificationDetails: user.notificationDetails,
+              notificationDetails: user.details,
             }),
           });
 

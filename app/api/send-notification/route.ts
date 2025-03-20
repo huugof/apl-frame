@@ -13,7 +13,13 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[API] POST /api/send-notification - Starting request");
     const requestJson = await request.json();
-    console.log("[API] Request body:", requestJson);
+    console.log("[API] Request body:", {
+      ...requestJson,
+      notificationDetails: {
+        ...requestJson.notificationDetails,
+        token: "[REDACTED]"
+      }
+    });
     
     const requestBody = requestSchema.safeParse(requestJson);
 
