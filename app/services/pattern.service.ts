@@ -9,11 +9,17 @@ export class PatternService {
      */
     public static async getDailyPattern(): Promise<Pattern> {
         const host = process.env.NEXT_PUBLIC_URL || "https://apl-frame.vercel.app";
+        console.log("[PatternService] Fetching daily pattern from:", host);
         const response = await fetch(`${host}/api/patterns`);
         if (!response.ok) {
+            console.error("[PatternService] Failed to fetch daily pattern:", response.status);
             throw new Error("Failed to fetch daily pattern");
         }
         const data = await response.json();
+        console.log("[PatternService] Retrieved pattern:", {
+            id: data.pattern.id,
+            title: data.pattern.title
+        });
         return data.pattern;
     }
 

@@ -211,21 +211,63 @@ export default function RandomPattern() {
   // Check for new patterns without loading them
   const checkForNewPattern = async () => {
     try {
-      console.log("Checking for new pattern...");
+      console.log("[Pattern] Checking for new pattern...");
       const latestPattern = await PatternService.getDailyPattern();
-      console.log("Latest pattern:", latestPattern);
-      console.log("Current pattern:", pattern);
       
-      if (pattern && latestPattern.id !== pattern.id) {
-        console.log("New pattern detected! Sending notifications...");
-        setNewPatternAvailable(true);
-        // Send notification when new pattern is available
-        await sendNewPatternNotification(latestPattern);
+      // Log detailed pattern information
+      console.log("[Pattern] Latest pattern:", {
+        id: latestPattern.id,
+        title: latestPattern.title
+      });
+      
+      if (pattern) {
+        console.log("[Pattern] Current pattern:", {
+          id: pattern.id,
+          title: pattern.title
+        });
+        
+        // More explicit comparison
+        const isNewPattern = latestPattern.id !== pattern.id;
+        console.log("[Pattern] Is new pattern?", isNewPattern);
+        
+        if (isNewPattern) {
+          console.log("[Pattern] New pattern detected! Sending notifications...");
+          setNewPatternAvailable(true);
+          
+          // Test notification directly using the test endpoint first
+          try {
+            const testResponse = await fetch("/api/send-notification", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                data: {
+                  fid: 1 // Replace with your FID for testing
+                }
+              }),
+            });
+            console.log("[Pattern] Test notification response:", await testResponse.json());
+          } catch (error) {
+            console.error("[Pattern] Test notification failed:", error);
+          }
+          
+          // Then try the regular notification
+          await sendNewPatternNotification(latestPattern);
+        } else {
+          console.log("[Pattern] No new pattern available");
+        }
       } else {
-        console.log("No new pattern available");
+        console.log("[Pattern] No current pattern to compare against");
       }
     } catch (error) {
-      console.error("Failed to check for new pattern:", error);
+      console.error("[Pattern] Failed to check for new pattern:", error);
+      if (error instanceof Error) {
+        console.error("[Pattern] Error details:", {
+          message: error.message,
+          stack: error.stack
+        });
+      }
     }
   };
 
@@ -234,6 +276,7 @@ export default function RandomPattern() {
     const checkMinute = () => {
       const newMinute = Math.floor(new Date().getTime() / (1000 * 60));
       if (newMinute !== currentMinute) {
+        console.log(`[Pattern] Minute changed from ${currentMinute} to ${newMinute}`);
         setCurrentMinute(newMinute);
         checkForNewPattern();
       }
