@@ -5,7 +5,6 @@ import {
 import { getUserNotificationDetails } from "@/lib/kv";
 
 const appUrl = process.env.NEXT_PUBLIC_URL || "";
-const notificationUrl = process.env.FARCASTER_NOTIFICATION_URL || "https://api.warpcast.com/v1/frame-notifications";
 
 type SendFrameNotificationResult =
   | {
@@ -36,7 +35,7 @@ export async function sendFrameNotification({
   }
 
   console.log(`[NOTIF] Found notification details for user ${fid}`);
-  console.log(`[NOTIF] Notification URL: ${notificationUrl}`);
+  console.log(`[NOTIF] Notification URL: ${notificationDetails.url}`);
   console.log(`[NOTIF] Token present: ${!!notificationDetails.token}`);
 
   const notificationRequest = {
@@ -47,22 +46,31 @@ export async function sendFrameNotification({
     tokens: [notificationDetails.token],
   } satisfies SendNotificationRequest;
 
-  console.log("[NOTIF] Sending notification request:", {
-    ...notificationRequest,
-    tokens: ["[REDACTED]"]
-  });
-
   try {
-    const response = await fetch(notificationUrl, {
+    console.log("[NOTIF] Sending notification request:", {
+      url: notificationDetails.url,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.FARCASTER_NOTIFICATION_TOKEN}`
+        "Authorization": "Bearer [REDACTED]"
+      },
+      body: {
+        ...notificationRequest,
+        tokens: ["[REDACTED]"]
+      }
+    });
+
+    const response = await fetch(notificationDetails.url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${notificationDetails.token}`
       },
       body: JSON.stringify(notificationRequest),
     });
 
     console.log(`[NOTIF] Response status: ${response.status}`);
+    console.log("[NOTIF] Response headers:", Object.fromEntries(response.headers.entries()));
     const responseJson = await response.json();
     console.log("[NOTIF] Response body:", responseJson);
 
