@@ -1,6 +1,7 @@
 import {
   SendNotificationRequest,
   sendNotificationResponseSchema,
+  FrameNotificationDetails,
 } from "@farcaster/frame-sdk";
 import { getUserNotificationDetails } from "@/lib/kv";
 
@@ -19,16 +20,19 @@ export async function sendFrameNotification({
   fid,
   title,
   body,
+  notificationDetails: providedNotificationDetails,
 }: {
   fid: number;
   title: string;
   body: string;
+  notificationDetails?: FrameNotificationDetails;
 }): Promise<SendFrameNotificationResult> {
   console.log(`[NOTIF] Attempting to send notification to user ${fid}`);
   console.log(`[NOTIF] Title: ${title}`);
   console.log(`[NOTIF] Body: ${body}`);
   
-  const notificationDetails = await getUserNotificationDetails(fid);
+  // Use provided notification details or get from Redis
+  const notificationDetails = providedNotificationDetails || await getUserNotificationDetails(fid);
   if (!notificationDetails) {
     console.log(`[NOTIF] No notification details found for user ${fid}`);
     return { state: "no_token" };

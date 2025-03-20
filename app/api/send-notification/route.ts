@@ -44,14 +44,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Save notification details
-    await setUserNotificationDetails(fid, notificationDetails);
-
-    // Send test notification
+    // Send test notification using the notification details from the request
     const sendResult = await sendFrameNotification({
       fid,
       title: "Test notification",
       body: "Sent at " + new Date().toISOString(),
+      notificationDetails, // Pass the notification details directly
     });
 
     if (sendResult.state === "error") {
