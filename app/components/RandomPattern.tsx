@@ -122,38 +122,28 @@ export default function RandomPattern() {
         return;
       }
 
-      console.log("Fetching users with notifications...");
-      const response = await fetch("/api/notifications/users", {
-        method: "GET",
-        cache: "no-store",
+      console.log("Sending new pattern notification...");
+      const response = await fetch("/api/send-notification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fid: 1, // Replace with your FID for testing
+          notificationDetails: {
+            url: window.location.origin,
+            token: "test-token" // This will be replaced by the server with the actual token
+          }
+        }),
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to get notification users: ${response.status}`);
+        throw new Error(`Failed to send notification: ${response.status}`);
       }
       
-      const users = await response.json();
-      console.log(`Found ${users.length} users to notify`);
+      const result = await response.json();
+      console.log("[Pattern] Notification sent:", result);
       
-      // Send notification to each user
-      for (const user of users) {
-        console.log(`Sending notification to user ${user.fid}...`);
-        const result = await sendFrameNotification({
-          fid: user.fid,
-          title: "New Pattern Available",
-          body: `A new pattern is available: ${newPattern.title}`,
-        });
-        
-        if (result.state === "success") {
-          console.log(`Successfully sent notification to user ${user.fid}`);
-        } else if (result.state === "no_token") {
-          console.log(`No notification token found for user ${user.fid}`);
-        } else if (result.state === "rate_limit") {
-          console.log(`Rate limited when sending to user ${user.fid}`);
-        } else {
-          console.error(`Failed to send notification to user ${user.fid}:`, result.error);
-        }
-      }
     } catch (error) {
       console.error("Error sending notifications:", error);
     }

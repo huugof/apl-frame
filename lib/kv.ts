@@ -1,14 +1,29 @@
 import { FrameNotificationDetails } from "@farcaster/frame-sdk";
 import { Redis } from "@upstash/redis";
 
-// Debug log Redis configuration
-console.log("[KV] Redis URL configured:", !!process.env.KV_URL);
-console.log("[KV] Redis Token configured:", !!process.env.KV_REST_API_TOKEN);
+// Only initialize Redis on the server side
+let redis: Redis | null = null;
 
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL,
-  token: process.env.KV_REST_API_TOKEN,
-});
+function getRedisClient(): Redis {
+  if (!redis) {
+    if (typeof window !== "undefined") {
+      throw new Error("Redis client cannot be initialized on the client side");
+    }
+    
+    const url = process.env.KV_REST_API_URL;
+    const token = process.env.KV_REST_API_TOKEN;
+    
+    if (!url || !token) {
+      throw new Error("Redis configuration is missing. Please check your environment variables.");
+    }
+    
+    redis = new Redis({
+      url,
+      token,
+    });
+  }
+  return redis;
+}
 
 function getUserNotificationDetailsKey(fid: number): string {
   return `apl-daily:user:${fid}`;
@@ -20,6 +35,7 @@ export async function getUserNotificationDetails(
   try {
     const key = getUserNotificationDetailsKey(fid);
     console.log("[KV] Getting notification details for key:", key);
+    const redis = getRedisClient();
     const result = await redis.get<FrameNotificationDetails>(key);
     console.log("[KV] Retrieved notification details:", result ? "Found" : "Not found");
     return result;
@@ -39,8 +55,7 @@ export async function getUserNotificationDetails(
 export async function getAllUsersWithNotifications(): Promise<Array<{ fid: number; details: FrameNotificationDetails }>> {
   try {
     console.log("[KV] Getting all users with notifications");
-    console.log("[KV] Redis URL:", process.env.KV_REST_API_URL);
-    console.log("[KV] Redis Token configured:", !!process.env.KV_REST_API_TOKEN);
+    const redis = getRedisClient();
     
     // Get all keys matching the pattern
     const keys = await redis.keys("apl-daily:user:*");
@@ -90,6 +105,7 @@ export async function setUserNotificationDetails(
     const key = getUserNotificationDetailsKey(fid);
     console.log("[KV] Setting notification details for key:", key);
     console.log("[KV] Notification details to save:", notificationDetails);
+    const redis = getRedisClient();
     await redis.set(key, notificationDetails);
     console.log("[KV] Successfully saved notification details");
   } catch (error) {
@@ -111,6 +127,7 @@ export async function deleteUserNotificationDetails(
   try {
     const key = getUserNotificationDetailsKey(fid);
     console.log("[KV] Deleting notification details for key:", key);
+    const redis = getRedisClient();
     await redis.del(key);
     console.log("[KV] Successfully deleted notification details");
   } catch (error) {
