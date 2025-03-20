@@ -126,7 +126,7 @@ export default function RandomPattern() {
           fid: 1234, // Replace with actual FID
           notificationDetails: {
             url: "https://api.warpcast.com/v1/frame-notifications", // Default URL
-            token: "", // Token will be set by the server
+            token: "0195a503-3d04-8b5d-f870-8265c005abfb", // Use the actual token from your .env.local
           },
         }),
       });

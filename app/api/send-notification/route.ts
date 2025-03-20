@@ -26,11 +26,21 @@ export async function POST(request: NextRequest) {
     const { fid, notificationDetails } = requestBody.data;
     console.log(`[API] Sending test notification to user ${fid}`);
 
+    // Validate token format
+    const tokenRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!tokenRegex.test(notificationDetails.token)) {
+      console.error("[API] Invalid token format");
+      return Response.json(
+        { success: false, error: "Invalid token format" },
+        { status: 400 }
+      );
+    }
+
     // Override notification details with environment variables
     const updatedNotificationDetails = {
       ...notificationDetails,
       url: process.env.FARCASTER_NOTIFICATION_URL || "https://api.warpcast.com/v1/frame-notifications",
-      token: process.env.FARCASTER_NOTIFICATION_TOKEN || "",
+      token: process.env.FARCASTER_NOTIFICATION_TOKEN || notificationDetails.token,
     };
 
     // Save notification details
