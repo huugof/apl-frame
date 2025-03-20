@@ -31,8 +31,8 @@ export default function RandomPattern() {
   const [pattern, setPattern] = useState<Pattern | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentMinute, setCurrentMinute] = useState(() => 
-    Math.floor(new Date().getTime() / (1000 * 60))
+  const [currentHour, setCurrentHour] = useState(() => 
+    Math.floor(new Date().getTime() / (1000 * 60 * 60))
   );
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [hasAddedFrame, setHasAddedFrame] = useState(false);
@@ -304,19 +304,19 @@ export default function RandomPattern() {
     }
   };
 
-  // Check for minute changes
+  // Check for hour changes
   useEffect(() => {
-    const checkMinute = () => {
-      const newMinute = Math.floor(new Date().getTime() / (1000 * 60));
-      if (newMinute !== currentMinute) {
-        console.log(`[Pattern] Minute changed from ${currentMinute} to ${newMinute}`);
-        setCurrentMinute(newMinute);
+    const checkHour = () => {
+      const newHour = Math.floor(new Date().getTime() / (1000 * 60 * 60));
+      if (newHour !== currentHour) {
+        console.log(`[Pattern] Hour changed from ${currentHour} to ${newHour}`);
+        setCurrentHour(newHour);
         checkForNewPattern();
       }
     };
 
-    // Check every second for minute changes
-    const intervalId = setInterval(checkMinute, 1000);
+    // Check every minute for hour changes
+    const intervalId = setInterval(checkHour, 60000);
 
     // Initial load
     if (!pattern) {
@@ -325,7 +325,7 @@ export default function RandomPattern() {
 
     // Cleanup interval on unmount
     return () => clearInterval(intervalId);
-  }, [currentMinute, pattern]);
+  }, [currentHour, pattern]);
 
   if (!pattern) {
     return <div>Loading pattern...</div>;

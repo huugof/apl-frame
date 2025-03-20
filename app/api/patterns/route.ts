@@ -18,8 +18,8 @@ function seededRandom(seed: number): number {
 export async function GET() {
   try {
     const now = new Date();
-    const minutes = Math.floor(now.getTime() / (1000 * 60));
-    const index = minutes % patterns.length;
+    const hours = Math.floor(now.getTime() / (1000 * 60 * 60));
+    const index = hours % patterns.length;
     const pattern = patterns[index];
 
     return NextResponse.json(

@@ -37,7 +37,10 @@ export async function getUserNotificationDetails(
     console.log("[KV] Getting notification details for key:", key);
     const redis = getRedisClient();
     const result = await redis.get<FrameNotificationDetails>(key);
-    console.log("[KV] Retrieved notification details:", result ? "Found" : "Not found");
+    console.log("[KV] Retrieved notification details:", {
+      ...result,
+      token: result?.token
+    });
     return result;
   } catch (error) {
     console.error("[KV] Error getting notification details:", error);
