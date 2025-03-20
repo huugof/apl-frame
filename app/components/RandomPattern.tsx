@@ -31,9 +31,6 @@ export default function RandomPattern() {
   const [pattern, setPattern] = useState<Pattern | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentMinute, setCurrentMinute] = useState(() => 
-    Math.floor(new Date().getTime() / (1000 * 60))
-  );
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [hasAddedFrame, setHasAddedFrame] = useState(false);
   const [newPatternAvailable, setNewPatternAvailable] = useState(false);
@@ -111,53 +108,6 @@ export default function RandomPattern() {
     }
   };
 
-  const sendNewPatternNotification = async (pattern: Pattern) => {
-    try {
-      console.log("[NOTIF] Sending new pattern notification");
-      
-      // First, get all users with notifications
-      const response = await fetch("/api/notifications/users");
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("[NOTIF] Failed to get users with notifications:", errorData);
-        return;
-      }
-
-      const users = await response.json();
-      console.log(`[NOTIF] Found ${users.length} users with notifications`);
-
-      // Send notification to each user
-      for (const user of users) {
-        try {
-          console.log(`[NOTIF] Sending notification to user ${user.fid}`);
-          const notificationResponse = await fetch("/api/send-notification", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              fid: user.fid,
-              notificationDetails: user.details,
-            }),
-          });
-
-          if (!notificationResponse.ok) {
-            const errorData = await notificationResponse.json();
-            console.error(`[NOTIF] Failed to send notification to user ${user.fid}:`, errorData);
-            continue;
-          }
-
-          const data = await notificationResponse.json();
-          console.log(`[NOTIF] Successfully sent notification to user ${user.fid}:`, data);
-        } catch (error) {
-          console.error(`[NOTIF] Error sending notification to user ${user.fid}:`, error);
-        }
-      }
-    } catch (error) {
-      console.error("[NOTIF] Error in notification process:", error);
-    }
-  };
-
   // Initialize Frame SDK and load pattern
   useEffect(() => {
     const initializeFrame = async () => {
@@ -206,73 +156,6 @@ export default function RandomPattern() {
       }
     };
   }, [isSDKLoaded]);
-
-  // Check for new patterns without loading them
-  const checkForNewPattern = async () => {
-    try {
-      console.log("[Pattern] Checking for new pattern...");
-      const latestPattern = await PatternService.getDailyPattern();
-      
-      // Log detailed pattern information
-      console.log("[Pattern] Latest pattern:", {
-        id: latestPattern.id,
-        title: latestPattern.title
-      });
-      
-      if (pattern) {
-        console.log("[Pattern] Current pattern:", {
-          id: pattern.id,
-          title: pattern.title
-        });
-        
-        // Compare pattern IDs
-        const isNewPattern = latestPattern.id !== pattern.id;
-        console.log("[Pattern] Is new pattern?", isNewPattern);
-        
-        if (isNewPattern) {
-          console.log("[Pattern] New pattern detected! Sending notifications...");
-          setNewPatternAvailable(true);
-          await sendNewPatternNotification(latestPattern);
-        } else {
-          console.log("[Pattern] No new pattern available");
-        }
-      } else {
-        console.log("[Pattern] No current pattern to compare against");
-        // If no pattern exists, treat it as a new pattern
-        setNewPatternAvailable(true);
-        await sendNewPatternNotification(latestPattern);
-      }
-    } catch (error) {
-      console.error("[Pattern] Failed to check for new pattern:", error);
-      if (error instanceof Error) {
-        console.error("[Pattern] Error details:", {
-          message: error.message,
-          stack: error.stack
-        });
-      }
-    }
-  };
-
-  // Check for minute changes
-  useEffect(() => {
-    const checkMinute = () => {
-      const newMinute = Math.floor(new Date().getTime() / (1000 * 60));
-      if (newMinute !== currentMinute) {
-        console.log(`[Pattern] Minute changed from ${currentMinute} to ${newMinute}`);
-        setCurrentMinute(newMinute);
-        checkForNewPattern();
-      }
-    };
-
-    // Check every second for minute changes
-    const intervalId = setInterval(checkMinute, 1000);
-
-    // Initial check
-    checkMinute();
-
-    // Cleanup interval on unmount
-    return () => clearInterval(intervalId);
-  }, [currentMinute]); // Remove pattern from dependencies
 
   if (!pattern) {
     return <div>Loading pattern...</div>;

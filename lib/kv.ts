@@ -4,7 +4,7 @@ import { Redis } from "@upstash/redis";
 // Only initialize Redis on the server side
 let redis: Redis | null = null;
 
-function getRedisClient(): Redis {
+export function getRedisClient(): Redis {
   if (!redis) {
     if (typeof window !== "undefined") {
       throw new Error("Redis client cannot be initialized on the client side");
