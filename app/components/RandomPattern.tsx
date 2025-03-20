@@ -225,7 +225,7 @@ export default function RandomPattern() {
           title: pattern.title
         });
         
-        // More explicit comparison
+        // Compare pattern IDs
         const isNewPattern = latestPattern.id !== pattern.id;
         console.log("[Pattern] Is new pattern?", isNewPattern);
         
@@ -238,6 +238,9 @@ export default function RandomPattern() {
         }
       } else {
         console.log("[Pattern] No current pattern to compare against");
+        // If no pattern exists, treat it as a new pattern
+        setNewPatternAvailable(true);
+        await sendNewPatternNotification(latestPattern);
       }
     } catch (error) {
       console.error("[Pattern] Failed to check for new pattern:", error);
@@ -264,14 +267,12 @@ export default function RandomPattern() {
     // Check every minute for hour changes
     const intervalId = setInterval(checkHour, 60000);
 
-    // Initial load
-    if (!pattern) {
-      loadPattern();
-    }
+    // Initial check
+    checkHour();
 
     // Cleanup interval on unmount
     return () => clearInterval(intervalId);
-  }, [currentHour, pattern]);
+  }, [currentHour]); // Remove pattern from dependencies
 
   if (!pattern) {
     return <div>Loading pattern...</div>;
