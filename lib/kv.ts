@@ -104,7 +104,10 @@ export async function setUserNotificationDetails(
   try {
     const key = getUserNotificationDetailsKey(fid);
     console.log("[KV] Setting notification details for key:", key);
-    console.log("[KV] Notification details to save:", notificationDetails);
+    console.log("[KV] Notification details to save:", {
+      ...notificationDetails,
+      token: notificationDetails.token
+    });
     const redis = getRedisClient();
     await redis.set(key, notificationDetails);
     console.log("[KV] Successfully saved notification details");

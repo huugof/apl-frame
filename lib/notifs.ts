@@ -41,6 +41,7 @@ export async function sendFrameNotification({
   console.log(`[NOTIF] Found notification details for user ${fid}`);
   console.log(`[NOTIF] Notification URL: ${notificationDetails.url}`);
   console.log(`[NOTIF] Token present: ${!!notificationDetails.token}`);
+  console.log(`[NOTIF] Token from Redis: ${notificationDetails.token}`);
 
   const notificationRequest = {
     notificationId: crypto.randomUUID(),
