@@ -13,6 +13,8 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[API] POST /api/send-notification - Starting request");
     const requestJson = await request.json();
+    console.log("[API] Request body:", requestJson);
+    
     const requestBody = requestSchema.safeParse(requestJson);
 
     if (requestBody.success === false) {
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
     // Validate token format
     const tokenRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!tokenRegex.test(notificationDetails.token)) {
-      console.error("[API] Invalid token format");
+      console.error("[API] Invalid token format:", notificationDetails.token);
       return Response.json(
         { success: false, error: "Invalid token format" },
         { status: 400 }
@@ -42,6 +44,11 @@ export async function POST(request: NextRequest) {
       url: process.env.FARCASTER_NOTIFICATION_URL || "https://api.warpcast.com/v1/frame-notifications",
       token: process.env.FARCASTER_NOTIFICATION_TOKEN || notificationDetails.token,
     };
+
+    console.log("[API] Using notification details:", {
+      ...updatedNotificationDetails,
+      token: "[REDACTED]"
+    });
 
     // Save notification details
     await setUserNotificationDetails(fid, updatedNotificationDetails);

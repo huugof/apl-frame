@@ -111,9 +111,38 @@ export default function RandomPattern() {
     }
   };
 
-  /**
-   * Send notification when a new pattern is available
-   */
+  const sendTestNotification = async (): Promise<boolean> => {
+    try {
+      console.log("[Pattern] Sending test notification...");
+      const response = await fetch("/api/send-notification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fid: 1234, // Replace with actual FID
+          notificationDetails: {
+            url: "https://api.warpcast.com/v1/frame-notifications",
+            token: "0195a503-3d04-8b5d-f870-8265c005abfb", // Use the actual token from your .env.local
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("[Pattern] Test notification failed:", errorData);
+        throw new Error(`Test notification failed: ${JSON.stringify(errorData)}`);
+      }
+
+      const result = await response.json();
+      console.log("[Pattern] Test notification response:", result);
+      return true;
+    } catch (error) {
+      console.error("[Pattern] Test notification failed:", error);
+      throw error;
+    }
+  };
+
   const sendNewPatternNotification = async (pattern: Pattern) => {
     try {
       console.log("[NOTIF] Sending new pattern notification");
@@ -125,7 +154,7 @@ export default function RandomPattern() {
         body: JSON.stringify({
           fid: 1234, // Replace with actual FID
           notificationDetails: {
-            url: "https://api.warpcast.com/v1/frame-notifications", // Default URL
+            url: "https://api.warpcast.com/v1/frame-notifications",
             token: "0195a503-3d04-8b5d-f870-8265c005abfb", // Use the actual token from your .env.local
           },
         }),
@@ -221,27 +250,10 @@ export default function RandomPattern() {
           
           // Test notification directly using the test endpoint first
           try {
-            const testResponse = await fetch("/api/send-notification", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                fid: 1, // Replace with your FID for testing
-                notificationDetails: {
-                  url: window.location.origin,
-                  token: "test-token" // This will be replaced by the server with the actual token
-                }
-              }),
-            });
-            const testResult = await testResponse.json();
-            console.log("[Pattern] Test notification response:", testResult);
-            
-            if (!testResponse.ok) {
-              throw new Error(`Test notification failed: ${testResult.error || testResponse.status}`);
-            }
+            await sendTestNotification();
           } catch (error) {
             console.error("[Pattern] Test notification failed:", error);
+            throw error;
           }
           
           // Then try the regular notification
