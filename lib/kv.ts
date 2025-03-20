@@ -2,7 +2,7 @@ import { FrameNotificationDetails } from "@farcaster/frame-sdk";
 import { Redis } from "@upstash/redis";
 
 // Debug log Redis configuration
-console.log("[KV] Redis URL configured:", !!process.env.KV_REST_API_URL);
+console.log("[KV] Redis URL configured:", !!process.env.KV_URL);
 console.log("[KV] Redis Token configured:", !!process.env.KV_REST_API_TOKEN);
 
 const redis = new Redis({
@@ -39,6 +39,9 @@ export async function getUserNotificationDetails(
 export async function getAllUsersWithNotifications(): Promise<Array<{ fid: number; details: FrameNotificationDetails }>> {
   try {
     console.log("[KV] Getting all users with notifications");
+    console.log("[KV] Redis URL:", process.env.KV_REST_API_URL);
+    console.log("[KV] Redis Token configured:", !!process.env.KV_REST_API_TOKEN);
+    
     // Get all keys matching the pattern
     const keys = await redis.keys("apl-daily:user:*");
     console.log(`[KV] Found ${keys.length} notification keys`);
@@ -47,14 +50,20 @@ export async function getAllUsersWithNotifications(): Promise<Array<{ fid: numbe
 
     // Get notification details for each user
     for (const key of keys) {
-      const fid = parseInt(key.split(":")[2], 10);
-      console.log(`[KV] Processing key for user ${fid}`);
-      const details = await redis.get<FrameNotificationDetails>(key);
-      if (details) {
-        users.push({ fid, details });
-        console.log(`[KV] Added user ${fid} to results`);
-      } else {
-        console.log(`[KV] No details found for user ${fid}`);
+      try {
+        const fid = parseInt(key.split(":")[2], 10);
+        console.log(`[KV] Processing key for user ${fid}`);
+        const details = await redis.get<FrameNotificationDetails>(key);
+        if (details) {
+          users.push({ fid, details });
+          console.log(`[KV] Added user ${fid} to results`);
+        } else {
+          console.log(`[KV] No details found for user ${fid}`);
+        }
+      } catch (keyError) {
+        console.error(`[KV] Error processing key ${key}:`, keyError);
+        // Continue with next key even if one fails
+        continue;
       }
     }
 
