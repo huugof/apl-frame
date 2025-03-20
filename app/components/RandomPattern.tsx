@@ -111,38 +111,6 @@ export default function RandomPattern() {
     }
   };
 
-  const sendTestNotification = async (fid: number): Promise<boolean> => {
-    try {
-      console.log(`[Pattern] Sending test notification to user ${fid}...`);
-      const response = await fetch("/api/send-notification", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fid,
-          notificationDetails: {
-            url: "https://api.warpcast.com/v1/frame-notifications",
-            token: "0195a503-3d04-8b5d-f870-8265c005abfb", // Use the actual token from your .env.local
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("[Pattern] Test notification failed:", errorData);
-        throw new Error(`Test notification failed: ${JSON.stringify(errorData)}`);
-      }
-
-      const result = await response.json();
-      console.log("[Pattern] Test notification response:", result);
-      return true;
-    } catch (error) {
-      console.error("[Pattern] Test notification failed:", error);
-      throw error;
-    }
-  };
-
   const sendNewPatternNotification = async (pattern: Pattern) => {
     try {
       console.log("[NOTIF] Sending new pattern notification");
@@ -264,28 +232,6 @@ export default function RandomPattern() {
         if (isNewPattern) {
           console.log("[Pattern] New pattern detected! Sending notifications...");
           setNewPatternAvailable(true);
-          
-          // Get all users with notifications
-          const usersResponse = await fetch("/api/notifications/users");
-          if (!usersResponse.ok) {
-            const errorData = await usersResponse.json();
-            console.error("[Pattern] Failed to get users with notifications:", errorData);
-            return;
-          }
-
-          const users = await usersResponse.json();
-          console.log(`[Pattern] Found ${users.length} users with notifications`);
-
-          // Send test notification to each user
-          for (const user of users) {
-            try {
-              await sendTestNotification(user.fid);
-            } catch (error) {
-              console.error(`[Pattern] Test notification failed for user ${user.fid}:`, error);
-            }
-          }
-          
-          // Then try the regular notification
           await sendNewPatternNotification(latestPattern);
         } else {
           console.log("[Pattern] No new pattern available");
