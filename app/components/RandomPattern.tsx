@@ -176,6 +176,8 @@ export default function RandomPattern() {
 
   // Check for new patterns every minute
   useEffect(() => {
+    let lastPatternId: number | null = null;
+
     const checkForNewPattern = async () => {
       try {
         const response = await fetch("/api/pattern/current");
@@ -183,9 +185,17 @@ export default function RandomPattern() {
           throw new Error("Failed to check pattern");
         }
         const data = await response.json();
-        if (pattern && data.pattern.id !== pattern.id) {
+        
+        // Only show the notification if we have a previous pattern and the new one is different
+        if (lastPatternId !== null && data.pattern.id !== lastPatternId) {
+          console.log("[Pattern] New pattern detected:", {
+            oldId: lastPatternId,
+            newId: data.pattern.id
+          });
           setNewPatternAvailable(true);
         }
+        
+        lastPatternId = data.pattern.id;
       } catch (error) {
         console.error("Failed to check for new pattern:", error);
       }
@@ -198,7 +208,7 @@ export default function RandomPattern() {
     const interval = setInterval(checkForNewPattern, 60000);
 
     return () => clearInterval(interval);
-  }, [pattern]);
+  }, []); // Remove pattern dependency to avoid unnecessary re-renders
 
   if (!pattern) {
     return <div>Loading pattern...</div>;
