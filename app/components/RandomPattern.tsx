@@ -38,9 +38,12 @@ export default function RandomPattern() {
   const loadPattern = async () => {
     try {
       setIsLoading(true);
-      // Get the pattern without specifying a run number to get the current one
-      const dailyPattern = await PatternService.getDailyPattern();
-      setPattern(dailyPattern);
+      const response = await fetch("/api/patterns/current");
+      if (!response.ok) {
+        throw new Error("Failed to fetch pattern");
+      }
+      const data = await response.json();
+      setPattern(data.pattern);
       setNewPatternAvailable(false);
       // Reset image when pattern changes
       setImageUrl(null);
@@ -113,8 +116,12 @@ export default function RandomPattern() {
 
   const checkForNewPattern = async () => {
     try {
-      const currentPattern = await PatternService.getDailyPattern();
-      if (pattern && currentPattern.id !== pattern.id) {
+      const response = await fetch("/api/patterns/current");
+      if (!response.ok) {
+        throw new Error("Failed to fetch pattern");
+      }
+      const data = await response.json();
+      if (pattern && data.pattern.id !== pattern.id) {
         setNewPatternAvailable(true);
       }
     } catch (error) {
