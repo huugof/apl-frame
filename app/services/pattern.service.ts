@@ -1,5 +1,6 @@
 import { Pattern } from "@/app/types";
 import { patterns } from "@/app/data/patterns";
+import { getRedisClient } from "@/lib/kv";
 
 /**
  * Get a deterministic pattern for a given UTC date and run number
@@ -24,19 +25,34 @@ function getPatternForDateAndRun(date: Date, runNumber: number): Pattern {
 }
 
 /**
+ * Get the current run number for today
+ * @returns The current run number (0-based)
+ */
+async function getCurrentRunNumber(): Promise<number> {
+  const redis = await getRedisClient();
+  const today = new Date();
+  const dateKey = `run_count:${today.toISOString().split("T")[0]}`;
+  
+  // Get current run number without incrementing
+  const runNumber = await redis.get<number>(dateKey) || 0;
+  return runNumber - 1; // Convert to 0-based index
+}
+
+/**
  * Service class for handling pattern-related operations
  */
 export class PatternService {
     /**
      * Get the pattern for today
-     * @param runNumber - The run number for today (0-based)
+     * @param runNumber - Optional run number. If not provided, gets the current run number from Redis
      */
-    public static async getDailyPattern(runNumber: number = 0): Promise<Pattern> {
+    public static async getDailyPattern(runNumber?: number): Promise<Pattern> {
         const today = new Date();
-        const pattern = getPatternForDateAndRun(today, runNumber);
+        const currentRunNumber = runNumber ?? await getCurrentRunNumber();
+        const pattern = getPatternForDateAndRun(today, currentRunNumber);
         console.log("[PatternService] Retrieved pattern:", {
             pattern,
-            runNumber,
+            runNumber: currentRunNumber,
             date: today.toISOString()
         });
         return pattern;

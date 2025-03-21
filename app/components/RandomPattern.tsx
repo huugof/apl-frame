@@ -37,6 +37,7 @@ export default function RandomPattern() {
 
   const loadPattern = async () => {
     try {
+      // Get the pattern without specifying a run number to get the current one
       const dailyPattern = await PatternService.getDailyPattern();
       setPattern(dailyPattern);
       setNewPatternAvailable(false);
@@ -49,13 +50,12 @@ export default function RandomPattern() {
 
   const generatePatternImage = async () => {
     if (!pattern) return;
-
     setIsLoading(true);
     try {
       const url = await PatternService.generatePatternImage(pattern);
       setImageUrl(url);
     } catch (error) {
-      console.error("Failed to generate image:", error);
+      console.error("Failed to generate pattern image:", error);
     } finally {
       setIsLoading(false);
     }
@@ -108,6 +108,17 @@ export default function RandomPattern() {
     }
   };
 
+  const checkForNewPattern = async () => {
+    try {
+      const currentPattern = await PatternService.getDailyPattern();
+      if (pattern && currentPattern.id !== pattern.id) {
+        setNewPatternAvailable(true);
+      }
+    } catch (error) {
+      console.error("Failed to check for new pattern:", error);
+    }
+  };
+
   // Initialize Frame SDK and load pattern
   useEffect(() => {
     const initializeFrame = async () => {
@@ -157,27 +168,12 @@ export default function RandomPattern() {
     };
   }, [isSDKLoaded]);
 
-  // Check for new patterns every minute
   useEffect(() => {
-    const checkForNewPattern = async () => {
-      try {
-        const currentPattern = await PatternService.getDailyPattern();
-        if (pattern && currentPattern.id !== pattern.id) {
-          setNewPatternAvailable(true);
-        }
-      } catch (error) {
-        console.error("Failed to check for new pattern:", error);
-      }
-    };
-
-    // Check immediately
-    checkForNewPattern();
-
-    // Then check every minute
+    loadPattern();
+    // Check for new patterns every minute
     const interval = setInterval(checkForNewPattern, 60000);
-
     return () => clearInterval(interval);
-  }, [pattern]);
+  }, []);
 
   if (!pattern) {
     return <div>Loading pattern...</div>;
