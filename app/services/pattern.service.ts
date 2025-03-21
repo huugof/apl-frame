@@ -1,18 +1,51 @@
+import { Redis } from "@upstash/redis";
+import { getCurrentPatternId, getNextPatternId } from "@/app/data/pattern-list";
 import { Pattern } from "@/app/types";
 import { patterns } from "@/app/data/patterns";
-import { getCurrentPatternId, getNextPatternId } from "@/app/data/pattern-list";
+import { getRedisClient } from "@/lib/kv";
 
 /**
  * Service class for handling pattern-related operations
  */
 export class PatternService {
+    private static redis: Redis;
+
+    /**
+     * Initialize the Redis client
+     */
+    public static initialize(redis: Redis): void {
+        PatternService.redis = redis;
+    }
+
+    /**
+     * Get the current daily pattern
+     */
+    public static async getDailyPattern(): Promise<Pattern> {
+        if (!PatternService.redis) {
+            throw new Error("Redis client not initialized");
+        }
+
+        const patternId = await getCurrentPatternId(PatternService.redis);
+        return {
+            id: patternId,
+            title: `Pattern ${patternId}`,
+            name: `Pattern ${patternId}`,
+            number: patternId,
+            problem: "Loading pattern...",
+            solution: "Loading pattern...",
+            relatedPatterns: "Loading related patterns...",
+            imagePrompt: "Loading image prompt..."
+        };
+    }
+
     /**
      * Get the current pattern
      */
-    public static async getDailyPattern(): Promise<Pattern> {
+    public static async getCurrentPattern(): Promise<Pattern> {
         try {
-            console.log("[PatternService] Getting daily pattern...");
-            const patternId = getCurrentPatternId();
+            console.log("[PatternService] Getting current pattern...");
+            const redis = getRedisClient();
+            const patternId = await getCurrentPatternId(redis);
             console.log("[PatternService] Got pattern ID:", patternId);
             
             const pattern = await this.getPatternById(patternId);
@@ -22,14 +55,14 @@ export class PatternService {
                 throw new Error(`Pattern with ID ${patternId} not found`);
             }
             
-            console.log("[PatternService] Retrieved daily pattern:", {
+            console.log("[PatternService] Retrieved current pattern:", {
                 id: pattern.id,
                 title: pattern.title
             });
             
             return pattern;
         } catch (error) {
-            console.error("[PatternService] Error getting daily pattern:", error);
+            console.error("[PatternService] Error getting current pattern:", error);
             throw error;
         }
     }
@@ -40,7 +73,8 @@ export class PatternService {
     public static async getPreviousPattern(): Promise<Pattern> {
         try {
             console.log("[PatternService] Getting previous pattern...");
-            const currentPatternId = getCurrentPatternId();
+            const redis = getRedisClient();
+            const currentPatternId = await getCurrentPatternId(redis);
             console.log("[PatternService] Current pattern ID:", currentPatternId);
             
             const currentIndex = patterns.findIndex(p => p.id === currentPatternId);
@@ -71,7 +105,8 @@ export class PatternService {
     public static async getNextPattern(): Promise<Pattern> {
         try {
             console.log("[PatternService] Getting next pattern...");
-            const patternId = getNextPatternId();
+            const redis = getRedisClient();
+            const patternId = await getNextPatternId(redis);
             console.log("[PatternService] Got next pattern ID:", patternId);
             
             const pattern = await this.getPatternById(patternId);
@@ -101,36 +136,13 @@ export class PatternService {
     }
 
     /**
-     * Generate an image for a pattern
+     * Generate an image for a given pattern
      */
     public static async generatePatternImage(pattern: Pattern): Promise<string> {
-        try {
-            console.log("[PatternService] Generating image for pattern:", {
-                id: pattern.id,
-                title: pattern.title
-            });
-            
-            const response = await fetch("/api/generate-image", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    prompt: `${pattern.imagePrompt}, professional architectural rendering, detailed, realistic`,
-                }),
-            });
-
-            if (!response.ok) {
-                console.error("[PatternService] Failed to generate image:", response.status);
-                throw new Error("Failed to generate image");
-            }
-
-            const data = await response.json();
-            console.log("[PatternService] Successfully generated image");
-            return data.imageUrl;
-        } catch (error) {
-            console.error("[PatternService] Error generating image:", error);
-            throw error;
-        }
+        // TODO: Implement image generation logic
+        return `https://example.com/pattern-${pattern.id}.png`;
     }
-} 
+}
+
+// Mark this file as server-side only
+export const runtime = "edge"; 

@@ -5,7 +5,6 @@
 
 import { useState, useEffect } from "react";
 import { Pattern } from "@/app/types";
-import { PatternService } from "@/app/services/pattern.service";
 import PatternCard from "./PatternCard";
 import sdk from "@farcaster/frame-sdk";
 import { sendFrameNotification } from "@/lib/notifs";
@@ -37,8 +36,12 @@ export default function RandomPattern() {
 
   const loadPattern = async () => {
     try {
-      const dailyPattern = await PatternService.getDailyPattern();
-      setPattern(dailyPattern);
+      const response = await fetch("/api/pattern/current");
+      if (!response.ok) {
+        throw new Error("Failed to load pattern");
+      }
+      const data = await response.json();
+      setPattern(data.pattern);
       setNewPatternAvailable(false);
       // Reset image when pattern changes
       setImageUrl(null);
@@ -52,8 +55,22 @@ export default function RandomPattern() {
 
     setIsLoading(true);
     try {
-      const url = await PatternService.generatePatternImage(pattern);
-      setImageUrl(url);
+      const response = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: `${pattern.imagePrompt}, professional architectural rendering, detailed, realistic`,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate image");
+      }
+
+      const data = await response.json();
+      setImageUrl(data.imageUrl);
     } catch (error) {
       console.error("Failed to generate image:", error);
     } finally {
@@ -161,8 +178,12 @@ export default function RandomPattern() {
   useEffect(() => {
     const checkForNewPattern = async () => {
       try {
-        const currentPattern = await PatternService.getDailyPattern();
-        if (pattern && currentPattern.id !== pattern.id) {
+        const response = await fetch("/api/pattern/current");
+        if (!response.ok) {
+          throw new Error("Failed to check pattern");
+        }
+        const data = await response.json();
+        if (pattern && data.pattern.id !== pattern.id) {
           setNewPatternAvailable(true);
         }
       } catch (error) {

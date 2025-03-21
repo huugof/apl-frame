@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FrameActionType, Pattern } from "@/app/types";
 import { PatternService } from "@/app/services/pattern.service";
+import { getRedisClient } from "@/lib/kv";
 
 /**
  * Handle POST requests for frame interactions
@@ -10,6 +11,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const data = await req.json();
         const { untrustedData } = data;
         const { buttonIndex } = untrustedData;
+        
+        // Initialize Redis client
+        const redis = getRedisClient();
+        PatternService.initialize(redis);
         
         const pattern = await PatternService.getDailyPattern();
         
