@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Pattern } from "@/app/types";
 import { patterns } from "@/app/data/patterns";
+import { getRedisClient } from "@/lib/kv";
 
 // Tell Next.js this is a dynamic route
 export const dynamic = 'force-dynamic';
@@ -17,10 +18,28 @@ function seededRandom(seed: number): number {
 
 export async function GET() {
   try {
-    const now = new Date();
-    const minutes = Math.floor(now.getTime() / (1000 * 60));
-    const index = minutes % patterns.length;
-    const pattern = patterns[index];
+    // Get the pattern ID from Redis
+    const redis = getRedisClient();
+    const patternIdStr = await redis.get<string>("apl-daily:last-pattern-id");
+    
+    if (!patternIdStr) {
+      console.error("[PATTERNS] No pattern ID found in Redis");
+      return NextResponse.json(
+        { error: "No pattern available" },
+        { status: 500 }
+      );
+    }
+
+    const patternId = parseInt(patternIdStr, 10);
+    const pattern = patterns.find(p => p.id === patternId);
+
+    if (!pattern) {
+      console.error("[PATTERNS] Pattern not found for ID:", patternId);
+      return NextResponse.json(
+        { error: "Pattern not found" },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       { pattern },

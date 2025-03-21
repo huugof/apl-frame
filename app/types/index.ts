@@ -12,16 +12,14 @@ export interface Pattern {
     title: string;
     /** The name of the pattern */
     name: string;
-    /** A brief summary of the pattern */
-    summary: string;
+    /** The pattern number */
+    number: number;
     /** The problem statement */
     problem: string;
     /** The solution statement */
     solution: string;
     /** The related patterns and their references */
-    relatedPatterns?: string;
-    /** The URL of the generated image */
-    imageUrl?: string;
+    relatedPatterns: string;
     /** The prompt used to generate the image */
     imagePrompt: string;
 }

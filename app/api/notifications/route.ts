@@ -1,10 +1,27 @@
 import { NextResponse } from "next/server";
 import { PatternService } from "@/app/services/pattern.service";
 import { sendFrameNotification } from "@/lib/notifs";
-import { getAllUsersWithNotifications } from "@/lib/kv";
+import { getAllUsersWithNotifications, getRedisClient } from "@/lib/kv";
+import { patterns } from "@/app/data/patterns";
+import { Pattern } from "@/app/types";
 
 // Force this route to be dynamic
 export const dynamic = "force-dynamic";
+
+/**
+ * Get a deterministic pattern for a given UTC date
+ */
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function getPatternForDate(date: Date): Pattern {
+  const utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const daysSinceEpoch = Math.floor(utcDate.getTime() / (1000 * 60 * 60 * 24));
+  const index = Math.floor(seededRandom(daysSinceEpoch) * patterns.length);
+  return patterns[index];
+}
 
 /**
  * Cron job endpoint that checks for new patterns and sends notifications
@@ -12,12 +29,18 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   console.log("[CRON] Starting daily pattern notification check");
   try {
-    // Get the latest pattern
-    const latestPattern = await PatternService.getDailyPattern();
-    console.log("[CRON] Latest pattern:", {
-      id: latestPattern.id,
-      title: latestPattern.title
+    // Get today's pattern
+    const today = new Date();
+    const pattern = getPatternForDate(today);
+    console.log("[CRON] Selected pattern for today:", {
+      id: pattern.id,
+      title: pattern.title
     });
+
+    // Update Redis with the new pattern ID
+    const redis = getRedisClient();
+    await redis.set("apl-daily:last-pattern-id", pattern.id.toString());
+    console.log("[CRON] Updated last pattern ID in Redis");
 
     // Get all users with notifications enabled
     const users = await getAllUsersWithNotifications();
@@ -30,7 +53,7 @@ export async function GET() {
         const sendResult = await sendFrameNotification({
           fid: user.fid,
           title: "New Daily Pattern Available!",
-          body: `Check out today's pattern: ${latestPattern.title}`,
+          body: `Check out today's pattern: ${pattern.title}`,
           notificationDetails: user.details,
         });
 
