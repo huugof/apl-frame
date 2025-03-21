@@ -1,3 +1,5 @@
+import { Redis } from "@upstash/redis";
+
 /**
  * Shuffle an array using the Fisher-Yates algorithm with a seed
  */
@@ -21,27 +23,24 @@ export const patternList: number[] = seededShuffle(
 );
 
 /**
- * Get the current index in the pattern list based on the date
+ * Get the current pattern ID from Redis
  */
-export function getCurrentPatternIndex(date: Date): number {
-  const utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const daysSinceEpoch = Math.floor(utcDate.getTime() / (1000 * 60 * 60 * 24));
-  return daysSinceEpoch % patternList.length;
+export async function getCurrentPatternId(redis: Redis): Promise<number> {
+  const currentIndexStr = await redis.get<string>("apl-daily:current-index");
+  const currentIndex = currentIndexStr ? parseInt(currentIndexStr, 10) : 0;
+  return patternList[currentIndex];
 }
 
 /**
- * Get the pattern ID for a given date
+ * Get the next pattern ID and update Redis
  */
-export function getPatternIdForDate(date: Date): number {
-  const index = getCurrentPatternIndex(date);
-  return patternList[index];
-}
-
-/**
- * Get the next pattern ID in the sequence
- */
-export function getNextPatternId(currentDate: Date): number {
-  const currentIndex = getCurrentPatternIndex(currentDate);
+export async function getNextPatternId(redis: Redis): Promise<number> {
+  const currentIndexStr = await redis.get<string>("apl-daily:current-index");
+  const currentIndex = currentIndexStr ? parseInt(currentIndexStr, 10) : 0;
   const nextIndex = (currentIndex + 1) % patternList.length;
+  
+  // Update the current index in Redis
+  await redis.set<string>("apl-daily:current-index", nextIndex.toString());
+  
   return patternList[nextIndex];
 } 
