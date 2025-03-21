@@ -40,7 +40,7 @@ export async function GET() {
           const sendResult = await sendFrameNotification({
             fid: user.fid,
             title: `${latestPattern.title}`,
-            body: "Check out the new pattern!",
+            body: `Check out Pattern! ${latestPattern.id}`,
             notificationDetails: user.details,
           });
 
