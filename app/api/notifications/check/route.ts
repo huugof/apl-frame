@@ -55,13 +55,13 @@ export async function GET() {
           console.error(`[CHECK] Error sending notification to user ${user.fid}:`, error);
         }
       }
-
-      // Update the last pattern ID in Redis (store as string)
-      await redis.set("apl-daily:last-pattern-id", latestPattern.id.toString());
-      console.log("[CHECK] Updated last pattern ID in Redis");
     } else {
       console.log("[CHECK] No pattern change detected");
     }
+
+    // Always update the last pattern ID in Redis (store as string)
+    await redis.set("apl-daily:last-pattern-id", latestPattern.id.toString());
+    console.log("[CHECK] Updated last pattern ID in Redis");
 
     return NextResponse.json({ success: true });
   } catch (error) {
