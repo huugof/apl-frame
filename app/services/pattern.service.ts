@@ -50,6 +50,13 @@ export class PatternService {
     }
 
     /**
+     * Get a pattern by its ID
+     */
+    public static async getPatternById(id: number): Promise<Pattern | null> {
+        return patterns.find(p => p.id === id) || null;
+    }
+
+    /**
      * Generate an image for a pattern
      */
     public static async generatePatternImage(pattern: Pattern): Promise<string> {
