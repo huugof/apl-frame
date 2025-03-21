@@ -16,9 +16,10 @@ async function fetchPatterns(): Promise<void> {
             id: 1,
             title: "INDEPENDENT REGIONS (1)",
             name: "INDEPENDENT REGIONS",
-            summary: "Metropolitan regions will not come to balance until each one is small and autonomous enough to be an independent sphere of culture.",
+            number: 1,
             problem: "Metropolitan regions are becoming too large and centralized.",
             solution: "Keep regional population within 2-10 million, giving each region substantial political autonomy.",
+            relatedPatterns: "This pattern helps to define the overall structure of the pattern language. It is the first pattern in the book and sets the stage for all other patterns.",
             imagePrompt: "A map showing distinct, autonomous metropolitan regions with clear boundaries, sustainable urban planning, aerial view"
         };
         
