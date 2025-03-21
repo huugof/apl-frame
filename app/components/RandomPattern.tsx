@@ -157,6 +157,28 @@ export default function RandomPattern() {
     };
   }, [isSDKLoaded]);
 
+  // Check for new patterns every minute
+  useEffect(() => {
+    const checkForNewPattern = async () => {
+      try {
+        const currentPattern = await PatternService.getDailyPattern();
+        if (pattern && currentPattern.id !== pattern.id) {
+          setNewPatternAvailable(true);
+        }
+      } catch (error) {
+        console.error("Failed to check for new pattern:", error);
+      }
+    };
+
+    // Check immediately
+    checkForNewPattern();
+
+    // Then check every minute
+    const interval = setInterval(checkForNewPattern, 60000);
+
+    return () => clearInterval(interval);
+  }, [pattern]);
+
   if (!pattern) {
     return <div>Loading pattern...</div>;
   }
