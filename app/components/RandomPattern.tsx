@@ -30,13 +30,14 @@ interface FrameEvent {
 export default function RandomPattern() {
   const [pattern, setPattern] = useState<Pattern | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [hasAddedFrame, setHasAddedFrame] = useState(false);
   const [newPatternAvailable, setNewPatternAvailable] = useState(false);
 
   const loadPattern = async () => {
     try {
+      setIsLoading(true);
       // Get the pattern without specifying a run number to get the current one
       const dailyPattern = await PatternService.getDailyPattern();
       setPattern(dailyPattern);
@@ -45,6 +46,8 @@ export default function RandomPattern() {
       setImageUrl(null);
     } catch (error) {
       console.error("Failed to load pattern:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -123,10 +126,7 @@ export default function RandomPattern() {
   useEffect(() => {
     const initializeFrame = async () => {
       try {
-        // Load pattern first
-        await loadPattern();
-        
-        // Initialize Frame SDK
+        // Initialize Frame SDK first
         if (sdk && !isSDKLoaded) {
           setIsSDKLoaded(true);
 
@@ -153,6 +153,9 @@ export default function RandomPattern() {
           // Prompt to add frame if not already added
           promptAddFrame();
         }
+
+        // Load pattern after SDK is initialized
+        await loadPattern();
       } catch (error) {
         console.error("[Frame] Failed to initialize frame:", error);
       }
@@ -168,15 +171,26 @@ export default function RandomPattern() {
     };
   }, [isSDKLoaded]);
 
+  // Check for new patterns periodically
   useEffect(() => {
-    loadPattern();
-    // Check for new patterns every minute
     const interval = setInterval(checkForNewPattern, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [pattern]); // Only re-run when pattern changes
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-lg text-gray-600">Loading pattern...</div>
+      </div>
+    );
+  }
 
   if (!pattern) {
-    return <div>Loading pattern...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-lg text-red-600">Failed to load pattern</div>
+      </div>
+    );
   }
 
   return (
