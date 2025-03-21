@@ -12,21 +12,22 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   console.log("[CHECK] Starting pattern change check");
   try {
-    // Get the latest pattern
+    // Get today's pattern
     const latestPattern = await PatternService.getDailyPattern();
     console.log("[CHECK] Latest pattern:", {
       id: latestPattern.id,
       title: latestPattern.title
     });
 
-    // Get the last pattern ID from Redis and convert it to a number
-    const redis = getRedisClient();
-    const lastPatternIdStr = await redis.get<string>("apl-daily:last-pattern-id");
-    const lastPatternId = lastPatternIdStr ? parseInt(lastPatternIdStr, 10) : null;
-    console.log("[CHECK] Last pattern ID:", lastPatternId);
+    // Get yesterday's pattern
+    const previousPattern = await PatternService.getPreviousPattern();
+    console.log("[CHECK] Previous pattern:", {
+      id: previousPattern.id,
+      title: previousPattern.title
+    });
 
-    // If this is the first pattern or the pattern has changed
-    if (!lastPatternId || lastPatternId !== latestPattern.id) {
+    // If the pattern has changed
+    if (previousPattern.id !== latestPattern.id) {
       console.log("[CHECK] Pattern change detected! Sending notifications...");
       
       // Get all users with notifications enabled
@@ -55,13 +56,14 @@ export async function GET() {
           console.error(`[CHECK] Error sending notification to user ${user.fid}:`, error);
         }
       }
+
+      // Update the last pattern ID in Redis (store as string)
+      const redis = getRedisClient();
+      await redis.set("apl-daily:last-pattern-id", latestPattern.id.toString());
+      console.log("[CHECK] Updated last pattern ID in Redis");
     } else {
       console.log("[CHECK] No pattern change detected");
     }
-
-    // Always update the last pattern ID in Redis (store as string)
-    await redis.set("apl-daily:last-pattern-id", latestPattern.id.toString());
-    console.log("[CHECK] Updated last pattern ID in Redis");
 
     return NextResponse.json({ success: true });
   } catch (error) {

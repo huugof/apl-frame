@@ -35,6 +35,21 @@ export class PatternService {
     }
 
     /**
+     * Get the pattern for yesterday (used for checking changes)
+     */
+    public static async getPreviousPattern(): Promise<Pattern> {
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+        const pattern = getPatternForDate(yesterday);
+        console.log("[PatternService] Retrieved previous pattern:", {
+            id: pattern.id,
+            title: pattern.title
+        });
+        return pattern;
+    }
+
+    /**
      * Generate an image for a pattern
      */
     public static async generatePatternImage(pattern: Pattern): Promise<string> {
