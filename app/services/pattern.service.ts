@@ -1,4 +1,20 @@
 import { Pattern } from "@/app/types";
+import { patterns } from "@/app/data/patterns";
+
+/**
+ * Get a deterministic pattern for a given UTC date
+ */
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function getPatternForDate(date: Date): Pattern {
+  const utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const daysSinceEpoch = Math.floor(utcDate.getTime() / (1000 * 60 * 60 * 24));
+  const index = Math.floor(seededRandom(daysSinceEpoch) * patterns.length);
+  return patterns[index];
+}
 
 /**
  * Service class for handling pattern-related operations
@@ -8,19 +24,14 @@ export class PatternService {
      * Get the pattern for today
      */
     public static async getDailyPattern(): Promise<Pattern> {
-        const host = process.env.NEXT_PUBLIC_URL || "https://apl-frame.vercel.app";
-        console.log("[PatternService] Fetching daily pattern from:", host);
-        const response = await fetch(`${host}/api/patterns`);
-        if (!response.ok) {
-            console.error("[PatternService] Failed to fetch daily pattern:", response.status);
-            throw new Error("Failed to fetch daily pattern");
-        }
-        const data = await response.json();
+        // Get today's pattern using the same logic as the cron job
+        const today = new Date();
+        const pattern = getPatternForDate(today);
         console.log("[PatternService] Retrieved pattern:", {
-            id: data.pattern.id,
-            title: data.pattern.title
+            id: pattern.id,
+            title: pattern.title
         });
-        return data.pattern;
+        return pattern;
     }
 
     /**
