@@ -1,7 +1,6 @@
 import { Pattern } from "@/app/types";
 import { patterns } from "@/app/data/patterns";
 import { getCurrentPatternId, getNextPatternId } from "@/app/data/pattern-list";
-import { getRedisClient } from "@/lib/kv";
 
 /**
  * Service class for handling pattern-related operations
@@ -13,8 +12,7 @@ export class PatternService {
     public static async getDailyPattern(): Promise<Pattern> {
         try {
             console.log("[PatternService] Getting daily pattern...");
-            const redis = getRedisClient();
-            const patternId = await getCurrentPatternId(redis);
+            const patternId = getCurrentPatternId();
             console.log("[PatternService] Got pattern ID:", patternId);
             
             const pattern = await this.getPatternById(patternId);
@@ -42,8 +40,7 @@ export class PatternService {
     public static async getPreviousPattern(): Promise<Pattern> {
         try {
             console.log("[PatternService] Getting previous pattern...");
-            const redis = getRedisClient();
-            const currentPatternId = await getCurrentPatternId(redis);
+            const currentPatternId = getCurrentPatternId();
             console.log("[PatternService] Current pattern ID:", currentPatternId);
             
             const currentIndex = patterns.findIndex(p => p.id === currentPatternId);
@@ -74,8 +71,7 @@ export class PatternService {
     public static async getNextPattern(): Promise<Pattern> {
         try {
             console.log("[PatternService] Getting next pattern...");
-            const redis = getRedisClient();
-            const patternId = await getNextPatternId(redis);
+            const patternId = getNextPatternId();
             console.log("[PatternService] Got next pattern ID:", patternId);
             
             const pattern = await this.getPatternById(patternId);
