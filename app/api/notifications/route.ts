@@ -9,18 +9,20 @@ import { Pattern } from "@/app/types";
 export const dynamic = "force-dynamic";
 
 /**
- * Get a deterministic pattern for a given UTC date
+ * Get the current run number for today and increment it
+ * @returns The current run number (0-based)
  */
-function seededRandom(seed: number): number {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
-
-function getPatternForDate(date: Date): Pattern {
-  const utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const daysSinceEpoch = Math.floor(utcDate.getTime() / (1000 * 60 * 60 * 24));
-  const index = Math.floor(seededRandom(daysSinceEpoch) * patterns.length);
-  return patterns[index];
+async function getAndIncrementRunNumber(): Promise<number> {
+  const redis = await getRedisClient();
+  const today = new Date();
+  const dateKey = `run_count:${today.toISOString().split("T")[0]}`;
+  
+  // Get current run number and increment it atomically
+  const runNumber = await redis.incr(dateKey);
+  // Set expiry to 24 hours from now to ensure the counter resets daily
+  await redis.expire(dateKey, 24 * 60 * 60);
+  
+  return runNumber - 1; // Convert to 0-based index
 }
 
 /**
@@ -28,70 +30,40 @@ function getPatternForDate(date: Date): Pattern {
  */
 export async function GET() {
   console.log("[CRON] Starting daily pattern generation");
+  
   try {
-    // Get today's pattern
-    const today = new Date();
-    const pattern = getPatternForDate(today);
+    // Get the current run number for today
+    const runNumber = await getAndIncrementRunNumber();
+    console.log("[CRON] Current run number:", runNumber);
+    
+    // Get today's pattern using the run number
+    const pattern = await PatternService.getDailyPattern(runNumber);
     console.log("[CRON] Generated pattern:", {
       id: pattern.id,
-      title: pattern.title
+      title: pattern.title,
+      runNumber
     });
-
-    // Get the last pattern ID from Redis
-    const redis = getRedisClient();
-    const lastPatternIdStr = await redis.get<string>("apl-daily:last-pattern-id");
-    const lastPatternId = lastPatternIdStr ? parseInt(lastPatternIdStr, 10) : null;
-    console.log("[CRON] Last pattern ID:", lastPatternId);
-
-    // If this is the first pattern or the pattern has changed
-    if (!lastPatternId || lastPatternId !== pattern.id) {
-      console.log("[CRON] Pattern change detected! Sending notifications...");
-      
-      // Get all users with notifications enabled
-      const users = await getAllUsersWithNotifications();
-      console.log(`[CRON] Found ${users.length} users with notifications enabled`);
-
-      // Send notifications to all users
-      for (const user of users) {
-        try {
-          console.log(`[CRON] Sending notification to user ${user.fid}`);
-          const sendResult = await sendFrameNotification({
-            fid: user.fid,
-            title: "New Daily Pattern Available!",
-            body: `Check out today's pattern: ${pattern.title}`,
-            notificationDetails: user.details,
-          });
-
-          if (sendResult.state === "error") {
-            console.error(`[CRON] Failed to send notification to user ${user.fid}:`, sendResult.error);
-          } else if (sendResult.state === "rate_limit") {
-            console.log(`[CRON] Rate limited when sending to user ${user.fid}`);
-          } else {
-            console.log(`[CRON] Successfully sent notification to user ${user.fid}`);
-          }
-        } catch (error) {
-          console.error(`[CRON] Error sending notification to user ${user.fid}:`, error);
-        }
-      }
-
-      // Update the last pattern ID in Redis
-      await redis.set("apl-daily:last-pattern-id", pattern.id.toString());
-      console.log("[CRON] Updated last pattern ID in Redis");
-    } else {
-      console.log("[CRON] No pattern change detected");
-    }
-
-    console.log("[CRON] Completed daily pattern generation");
+    
+    // Get all users who have notifications enabled
+    const users = await getAllUsersWithNotifications();
+    console.log("[CRON] Found users to notify:", users.length);
+    
+    // Send notifications to all users
+    const notificationPromises = users.map((user) =>
+      sendFrameNotification({
+        fid: user.fid,
+        title: "New Pattern Available!",
+        body: `Check out this pattern: ${pattern.title}`,
+        notificationDetails: user.details
+      })
+    );
+    
+    await Promise.all(notificationPromises);
+    console.log("[CRON] Successfully sent notifications");
+    
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[CRON] Error in pattern generation:", error);
-    if (error instanceof Error) {
-      console.error("[CRON] Error details:", {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-    }
     return NextResponse.json(
       { error: "Failed to generate pattern" },
       { status: 500 }

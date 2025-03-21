@@ -2,17 +2,24 @@ import { Pattern } from "@/app/types";
 import { patterns } from "@/app/data/patterns";
 
 /**
- * Get a deterministic pattern for a given UTC date
+ * Get a deterministic pattern for a given UTC date and run number
  */
 function seededRandom(seed: number): number {
   const x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
 }
 
-function getPatternForDate(date: Date): Pattern {
+/**
+ * Get a pattern based on date and run number
+ * @param date - The date to get the pattern for
+ * @param runNumber - The run number for this date (0-based)
+ */
+function getPatternForDateAndRun(date: Date, runNumber: number): Pattern {
   const utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
   const daysSinceEpoch = Math.floor(utcDate.getTime() / (1000 * 60 * 60 * 24));
-  const index = Math.floor(seededRandom(daysSinceEpoch) * patterns.length);
+  // Combine days since epoch with run number to create a unique seed
+  const seed = daysSinceEpoch * 1000 + runNumber;
+  const index = Math.floor(seededRandom(seed) * patterns.length);
   return patterns[index];
 }
 
@@ -22,14 +29,15 @@ function getPatternForDate(date: Date): Pattern {
 export class PatternService {
     /**
      * Get the pattern for today
+     * @param runNumber - The run number for today (0-based)
      */
-    public static async getDailyPattern(): Promise<Pattern> {
-        // Get today's pattern using the same logic as the cron job
+    public static async getDailyPattern(runNumber: number = 0): Promise<Pattern> {
         const today = new Date();
-        const pattern = getPatternForDate(today);
+        const pattern = getPatternForDateAndRun(today, runNumber);
         console.log("[PatternService] Retrieved pattern:", {
-            id: pattern.id,
-            title: pattern.title
+            pattern,
+            runNumber,
+            date: today.toISOString()
         });
         return pattern;
     }
@@ -41,7 +49,7 @@ export class PatternService {
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-        const pattern = getPatternForDate(yesterday);
+        const pattern = getPatternForDateAndRun(yesterday, 0);
         console.log("[PatternService] Retrieved previous pattern:", {
             id: pattern.id,
             title: pattern.title
