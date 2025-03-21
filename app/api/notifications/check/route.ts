@@ -39,8 +39,8 @@ export async function GET() {
           console.log(`[CHECK] Sending notification to user ${user.fid}`);
           const sendResult = await sendFrameNotification({
             fid: user.fid,
-            title: "New Pattern Available!",
-            body: `Check out the new pattern: ${latestPattern.title}`,
+            title: `${latestPattern.title}`,
+            body: "Check out the new pattern!",
             notificationDetails: user.details,
           });
 
