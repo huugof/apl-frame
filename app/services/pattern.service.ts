@@ -1,76 +1,80 @@
 import { Pattern } from "@/app/types";
 import { patterns } from "@/app/data/patterns";
-import { getPatternIdForDate, getNextPatternId } from "@/app/data/pattern-list";
+import { getCurrentPatternId, getNextPatternId } from "@/app/data/pattern-list";
+import { getRedisClient } from "@/lib/kv";
 
 /**
  * Service class for handling pattern-related operations
  */
 export class PatternService {
     /**
-     * Get the pattern for today
+     * Get the current pattern
      */
     public static async getDailyPattern(): Promise<Pattern> {
-        // Get today's pattern using the pattern list
-        const today = new Date();
-        const patternId = getPatternIdForDate(today);
-        const pattern = patterns.find(p => p.id === patternId);
+        const redis = getRedisClient();
+        const patternId = await getCurrentPatternId(redis);
+        const pattern = await this.getPatternById(patternId);
         
         if (!pattern) {
             throw new Error(`Pattern with ID ${patternId} not found`);
         }
-
-        console.log("[PatternService] Retrieved pattern:", {
+        
+        console.log("[PatternService] Retrieved daily pattern:", {
             id: pattern.id,
             title: pattern.title
         });
+        
         return pattern;
     }
 
     /**
-     * Get the pattern for yesterday (used for checking changes)
+     * Get the previous pattern
      */
     public static async getPreviousPattern(): Promise<Pattern> {
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-        const patternId = getPatternIdForDate(yesterday);
-        const pattern = patterns.find(p => p.id === patternId);
+        const redis = getRedisClient();
+        const currentPatternId = await getCurrentPatternId(redis);
+        const currentIndex = patterns.findIndex(p => p.id === currentPatternId);
+        
+        if (currentIndex === -1) {
+            throw new Error(`Current pattern with ID ${currentPatternId} not found`);
+        }
+        
+        const previousIndex = (currentIndex - 1 + patterns.length) % patterns.length;
+        const previousPattern = patterns[previousIndex];
+        
+        console.log("[PatternService] Retrieved previous pattern:", {
+            id: previousPattern.id,
+            title: previousPattern.title
+        });
+        
+        return previousPattern;
+    }
+
+    /**
+     * Get the next pattern
+     */
+    public static async getNextPattern(): Promise<Pattern> {
+        const redis = getRedisClient();
+        const patternId = await getNextPatternId(redis);
+        const pattern = await this.getPatternById(patternId);
         
         if (!pattern) {
             throw new Error(`Pattern with ID ${patternId} not found`);
         }
-
-        console.log("[PatternService] Retrieved previous pattern:", {
-            id: pattern.id,
-            title: pattern.title
-        });
-        return pattern;
-    }
-
-    /**
-     * Get the next pattern in the sequence
-     */
-    public static async getNextPattern(): Promise<Pattern> {
-        const today = new Date();
-        const nextPatternId = getNextPatternId(today);
-        const pattern = patterns.find(p => p.id === nextPatternId);
         
-        if (!pattern) {
-            throw new Error(`Pattern with ID ${nextPatternId} not found`);
-        }
-
         console.log("[PatternService] Retrieved next pattern:", {
             id: pattern.id,
             title: pattern.title
         });
+        
         return pattern;
     }
 
     /**
-     * Get a pattern by its ID
+     * Get a pattern by ID
      */
-    public static async getPatternById(id: number): Promise<Pattern | null> {
-        return patterns.find(p => p.id === id) || null;
+    public static async getPatternById(id: number): Promise<Pattern | undefined> {
+        return patterns.find(p => p.id === id);
     }
 
     /**
