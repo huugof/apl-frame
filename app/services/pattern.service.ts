@@ -1,42 +1,6 @@
 import { Pattern } from "@/app/types";
 import { patterns } from "@/app/data/patterns";
-import { getRedisClient } from "@/lib/kv";
-
-/**
- * Get a deterministic pattern for a given UTC date and run number
- */
-function seededRandom(seed: number): number {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
-
-/**
- * Get a pattern based on date and run number
- * @param date - The date to get the pattern for
- * @param runNumber - The run number for this date (0-based)
- */
-function getPatternForDateAndRun(date: Date, runNumber: number): Pattern {
-  const utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const daysSinceEpoch = Math.floor(utcDate.getTime() / (1000 * 60 * 60 * 24));
-  // Combine days since epoch with run number to create a unique seed
-  const seed = daysSinceEpoch * 1000 + runNumber;
-  const index = Math.floor(seededRandom(seed) * patterns.length);
-  return patterns[index];
-}
-
-/**
- * Get the current run number for today
- * @returns The current run number (0-based)
- */
-async function getCurrentRunNumber(): Promise<number> {
-  const redis = await getRedisClient();
-  const today = new Date();
-  const dateKey = `run_count:${today.toISOString().split("T")[0]}`;
-  
-  // Get current run number without incrementing
-  const runNumber = await redis.get<number>(dateKey) || 0;
-  return runNumber - 1; // Convert to 0-based index
-}
+import { getPatternIdForDate, getNextPatternId } from "@/app/data/pattern-list";
 
 /**
  * Service class for handling pattern-related operations
@@ -44,16 +8,20 @@ async function getCurrentRunNumber(): Promise<number> {
 export class PatternService {
     /**
      * Get the pattern for today
-     * @param runNumber - Optional run number. If not provided, gets the current run number from Redis
      */
-    public static async getDailyPattern(runNumber?: number): Promise<Pattern> {
+    public static async getDailyPattern(): Promise<Pattern> {
+        // Get today's pattern using the pattern list
         const today = new Date();
-        const currentRunNumber = runNumber ?? await getCurrentRunNumber();
-        const pattern = getPatternForDateAndRun(today, currentRunNumber);
+        const patternId = getPatternIdForDate(today);
+        const pattern = patterns.find(p => p.id === patternId);
+        
+        if (!pattern) {
+            throw new Error(`Pattern with ID ${patternId} not found`);
+        }
+
         console.log("[PatternService] Retrieved pattern:", {
-            pattern,
-            runNumber: currentRunNumber,
-            date: today.toISOString()
+            id: pattern.id,
+            title: pattern.title
         });
         return pattern;
     }
@@ -65,8 +33,33 @@ export class PatternService {
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-        const pattern = getPatternForDateAndRun(yesterday, 0);
+        const patternId = getPatternIdForDate(yesterday);
+        const pattern = patterns.find(p => p.id === patternId);
+        
+        if (!pattern) {
+            throw new Error(`Pattern with ID ${patternId} not found`);
+        }
+
         console.log("[PatternService] Retrieved previous pattern:", {
+            id: pattern.id,
+            title: pattern.title
+        });
+        return pattern;
+    }
+
+    /**
+     * Get the next pattern in the sequence
+     */
+    public static async getNextPattern(): Promise<Pattern> {
+        const today = new Date();
+        const nextPatternId = getNextPatternId(today);
+        const pattern = patterns.find(p => p.id === nextPatternId);
+        
+        if (!pattern) {
+            throw new Error(`Pattern with ID ${nextPatternId} not found`);
+        }
+
+        console.log("[PatternService] Retrieved next pattern:", {
             id: pattern.id,
             title: pattern.title
         });

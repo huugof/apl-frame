@@ -30,38 +30,32 @@ interface FrameEvent {
 export default function RandomPattern() {
   const [pattern, setPattern] = useState<Pattern | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [hasAddedFrame, setHasAddedFrame] = useState(false);
   const [newPatternAvailable, setNewPatternAvailable] = useState(false);
 
   const loadPattern = async () => {
     try {
-      setIsLoading(true);
-      const response = await fetch("/api/patterns/current");
-      if (!response.ok) {
-        throw new Error("Failed to fetch pattern");
-      }
-      const data = await response.json();
-      setPattern(data.pattern);
+      const dailyPattern = await PatternService.getDailyPattern();
+      setPattern(dailyPattern);
       setNewPatternAvailable(false);
       // Reset image when pattern changes
       setImageUrl(null);
     } catch (error) {
       console.error("Failed to load pattern:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const generatePatternImage = async () => {
     if (!pattern) return;
+
     setIsLoading(true);
     try {
       const url = await PatternService.generatePatternImage(pattern);
       setImageUrl(url);
     } catch (error) {
-      console.error("Failed to generate pattern image:", error);
+      console.error("Failed to generate image:", error);
     } finally {
       setIsLoading(false);
     }
@@ -114,26 +108,14 @@ export default function RandomPattern() {
     }
   };
 
-  const checkForNewPattern = async () => {
-    try {
-      const response = await fetch("/api/patterns/current");
-      if (!response.ok) {
-        throw new Error("Failed to fetch pattern");
-      }
-      const data = await response.json();
-      if (pattern && data.pattern.id !== pattern.id) {
-        setNewPatternAvailable(true);
-      }
-    } catch (error) {
-      console.error("Failed to check for new pattern:", error);
-    }
-  };
-
   // Initialize Frame SDK and load pattern
   useEffect(() => {
     const initializeFrame = async () => {
       try {
-        // Initialize Frame SDK first
+        // Load pattern first
+        await loadPattern();
+        
+        // Initialize Frame SDK
         if (sdk && !isSDKLoaded) {
           setIsSDKLoaded(true);
 
@@ -160,9 +142,6 @@ export default function RandomPattern() {
           // Prompt to add frame if not already added
           promptAddFrame();
         }
-
-        // Load pattern after SDK is initialized
-        await loadPattern();
       } catch (error) {
         console.error("[Frame] Failed to initialize frame:", error);
       }
@@ -178,26 +157,30 @@ export default function RandomPattern() {
     };
   }, [isSDKLoaded]);
 
-  // Check for new patterns periodically
+  // Check for new patterns every minute
   useEffect(() => {
-    const interval = setInterval(checkForNewPattern, 60000);
-    return () => clearInterval(interval);
-  }, [pattern]); // Only re-run when pattern changes
+    const checkForNewPattern = async () => {
+      try {
+        const currentPattern = await PatternService.getDailyPattern();
+        if (pattern && currentPattern.id !== pattern.id) {
+          setNewPatternAvailable(true);
+        }
+      } catch (error) {
+        console.error("Failed to check for new pattern:", error);
+      }
+    };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg text-gray-600">Loading pattern...</div>
-      </div>
-    );
-  }
+    // Check immediately
+    checkForNewPattern();
+
+    // Then check every minute
+    const interval = setInterval(checkForNewPattern, 60000);
+
+    return () => clearInterval(interval);
+  }, [pattern]);
 
   if (!pattern) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg text-red-600">Failed to load pattern</div>
-      </div>
-    );
+    return <div>Loading pattern...</div>;
   }
 
   return (
