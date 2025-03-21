@@ -18,6 +18,26 @@ async function getCurrentRunNumber(): Promise<number> {
 }
 
 /**
+ * Handle GET requests for initial frame load
+ */
+export async function GET(): Promise<NextResponse> {
+    try {
+        // Get the current pattern
+        const pattern = await PatternService.getDailyPattern();
+        
+        return NextResponse.json({
+            pattern,
+            hideSplashScreen: true
+        });
+    } catch (error) {
+        console.error("Error loading initial pattern:", error);
+        return NextResponse.json({
+            error: "Failed to load pattern"
+        }, { status: 500 });
+    }
+}
+
+/**
  * Handle POST requests for frame interactions
  */
 export async function POST(req: NextRequest): Promise<NextResponse> {
