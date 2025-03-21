@@ -27,7 +27,14 @@ export const patternList: number[] = seededShuffle(
  */
 export async function getCurrentPatternId(redis: Redis): Promise<number> {
   const currentIndexStr = await redis.get<string>("apl-daily:current-index");
-  const currentIndex = currentIndexStr ? parseInt(currentIndexStr, 10) : 0;
+  
+  // If no index exists in Redis, initialize it to 0
+  if (!currentIndexStr) {
+    await redis.set<string>("apl-daily:current-index", "0");
+    return patternList[0];
+  }
+  
+  const currentIndex = parseInt(currentIndexStr, 10);
   return patternList[currentIndex];
 }
 
