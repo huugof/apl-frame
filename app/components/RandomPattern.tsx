@@ -219,12 +219,12 @@ export default function RandomPattern() {
   const generateShareUrl = useCallback((): string => {
     if (!pattern || !appUrl) return "";
     
-    // Create the frame embed URL
+    // Create the frame embed URL with the current pattern ID
     const frameUrl = `${appUrl}?patternId=${pattern.id}`;
     
     // Create the Warpcast cast URL with the frame embed
     const warpcastUrl = new URL("https://warpcast.com/~/compose");
-    warpcastUrl.searchParams.set("text", `Check out this pattern from A Pattern Language: ${pattern.title}`);
+    warpcastUrl.searchParams.set("text", `Check out Pattern ${pattern.number}: ${pattern.title} from A Pattern Language`);
     warpcastUrl.searchParams.set("embeds[]", frameUrl);
     
     return warpcastUrl.toString();
