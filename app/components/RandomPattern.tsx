@@ -234,8 +234,11 @@ export default function RandomPattern() {
    * Open Warpcast compose dialog
    */
   const openWarpcastUrl = useCallback(() => {
-    sdk.actions.openUrl("https://warpcast.com/~/compose");
-  }, []);
+    const shareUrl = generateShareUrl();
+    if (shareUrl) {
+      sdk.actions.openUrl(shareUrl);
+    }
+  }, [generateShareUrl]);
 
   /**
    * Handle share button click
