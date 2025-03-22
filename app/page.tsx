@@ -1,4 +1,5 @@
 import RandomPattern from "./components/RandomPattern";
+import { Suspense } from "react";
 
 export default function Home() {
   // Format today's date in a clean way
@@ -11,7 +12,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen">
-      <RandomPattern />
+      <Suspense fallback={<div>Loading pattern...</div>}>
+        <RandomPattern />
+      </Suspense>
     </main>
   );
 }
