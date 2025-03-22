@@ -51,8 +51,8 @@ export async function GET() {
         console.log(`[CRON] Sending notification to user ${user.fid}`);
         const sendResult = await sendFrameNotification({
           fid: user.fid,
-          title: "New Pattern Available!",
-          body: `Check out today's pattern: ${nextPattern.title}`,
+          title: `${nextPattern.title}`,
+          body: `Check out pattern ${nextPattern.id}`,
           notificationDetails: user.details,
         });
 
