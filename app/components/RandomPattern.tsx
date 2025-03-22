@@ -48,6 +48,7 @@ export default function RandomPattern() {
   const [newPatternAvailable, setNewPatternAvailable] = useState(false);
   const [relatedPatterns, setRelatedPatterns] = useState<Array<{ id: number; title: string }>>([]);
   const searchParams = useSearchParams();
+  const appUrl = process.env.NEXT_PUBLIC_URL;
 
   /**
    * Load a pattern by ID
@@ -212,6 +213,34 @@ export default function RandomPattern() {
     }
   };
 
+  /**
+   * Generate a Warpcast cast URL with frame embed
+   */
+  const generateShareUrl = (): string => {
+    if (!pattern || !appUrl) return "";
+    
+    // Create the frame embed URL
+    const frameUrl = `${appUrl}?patternId=${pattern.id}`;
+    
+    // Create the Warpcast cast URL with the frame embed
+    const warpcastUrl = new URL("https://warpcast.com/~/compose");
+    warpcastUrl.searchParams.set("text", `Check out this pattern from A Pattern Language: ${pattern.title}`);
+    warpcastUrl.searchParams.set("embeds[]", frameUrl);
+    
+    return warpcastUrl.toString();
+  };
+
+  /**
+   * Handle share button click
+   */
+  const handleShareClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    const shareUrl = generateShareUrl();
+    if (shareUrl) {
+      window.open(shareUrl, "_blank");
+    }
+  };
+
   // Initialize Frame SDK and load pattern
   useEffect(() => {
     const initializeFrame = async () => {
@@ -316,14 +345,33 @@ export default function RandomPattern() {
           New pattern available
         </button>
       )}
-      <PatternCard
-        pattern={pattern}
-        imageUrl={imageUrl}
-        isLoading={isLoading}
-        onGenerateImage={generatePatternImage}
-        relatedPatterns={relatedPatterns}
-        onNavigateToPattern={navigateToPattern}
-      />
+      
+      <div className="flex flex-col items-center gap-4">
+        <PatternCard
+          pattern={pattern}
+          imageUrl={imageUrl}
+          isLoading={isLoading}
+          onGenerateImage={generatePatternImage}
+          onNavigateToPattern={navigateToPattern}
+          relatedPatterns={relatedPatterns}
+        />
+        
+        <div className="flex gap-4">
+          <button
+            onClick={handleNewPatternClick}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            New Pattern
+          </button>
+          
+          <button
+            onClick={handleShareClick}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+          >
+            Share on Warpcast
+          </button>
+        </div>
+      </div>
     </div>
   );
 } 
