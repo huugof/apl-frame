@@ -3,7 +3,7 @@
  */
 "use client";
 
-import { useState, useEffect, MouseEvent } from "react";
+import { useState, useEffect, MouseEvent, useCallback } from "react";
 import { Pattern } from "@/app/types";
 import PatternCard from "./PatternCard";
 import sdk from "@farcaster/frame-sdk";
@@ -216,7 +216,7 @@ export default function RandomPattern() {
   /**
    * Generate a Warpcast cast URL with frame embed
    */
-  const generateShareUrl = (): string => {
+  const generateShareUrl = useCallback((): string => {
     if (!pattern || !appUrl) return "";
     
     // Create the frame embed URL
@@ -228,27 +228,29 @@ export default function RandomPattern() {
     warpcastUrl.searchParams.set("embeds[]", frameUrl);
     
     return warpcastUrl.toString();
-  };
+  }, [pattern, appUrl]);
+
+  /**
+   * Open Warpcast compose dialog
+   */
+  const openWarpcastUrl = useCallback(async () => {
+    try {
+      // Close the frame first
+      await sdk.actions.close();
+      
+      // Then open Warpcast compose dialog
+      await sdk.actions.openUrl("https://warpcast.com/~/compose");
+    } catch (error) {
+      console.error("Error opening Warpcast:", error);
+    }
+  }, []);
 
   /**
    * Handle share button click
    */
   const handleShareClick = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    const shareUrl = generateShareUrl();
-    if (shareUrl) {
-      try {
-        // Close the frame first
-        await sdk.actions.close();
-        
-        // Then open Warpcast using the Frame SDK
-        await sdk.actions.openUrl(shareUrl);
-      } catch (error) {
-        console.error("Error handling share:", error);
-        // Fallback to direct navigation if SDK methods fail
-        window.location.href = shareUrl;
-      }
-    }
+    await openWarpcastUrl();
   };
 
   // Initialize Frame SDK and load pattern
