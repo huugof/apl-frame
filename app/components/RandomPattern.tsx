@@ -8,6 +8,7 @@ import { Pattern } from "@/app/types";
 import PatternCard from "./PatternCard";
 import sdk from "@farcaster/frame-sdk";
 import { sendFrameNotification } from "@/lib/notifs";
+import { useSearchParams } from "next/navigation";
 
 interface NotificationDetails {
   url: string;
@@ -46,6 +47,7 @@ export default function RandomPattern() {
   const [hasAddedFrame, setHasAddedFrame] = useState(false);
   const [newPatternAvailable, setNewPatternAvailable] = useState(false);
   const [relatedPatterns, setRelatedPatterns] = useState<Array<{ id: number; title: string }>>([]);
+  const searchParams = useSearchParams();
 
   /**
    * Load a pattern by ID
@@ -53,10 +55,23 @@ export default function RandomPattern() {
   const loadPattern = async (patternId?: number) => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/pattern/current");
+      const response = await fetch("/api/frame", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          untrustedData: {
+            buttonIndex: 1,
+            patternId
+          }
+        }),
+      });
+      
       if (!response.ok) {
         throw new Error("Failed to load pattern");
       }
+      
       const data = await response.json();
       setPattern(data.pattern);
       setNewPatternAvailable(false);
@@ -201,8 +216,11 @@ export default function RandomPattern() {
   useEffect(() => {
     const initializeFrame = async () => {
       try {
+        // Get pattern ID from URL if present
+        const patternId = searchParams.get("patternId");
+        
         // Load pattern first
-        await loadPattern();
+        await loadPattern(patternId ? parseInt(patternId, 10) : undefined);
         
         // Initialize Frame SDK
         if (sdk && !isSDKLoaded) {
@@ -244,7 +262,7 @@ export default function RandomPattern() {
         sdk.removeAllListeners();
       }
     };
-  }, [isSDKLoaded]);
+  }, [isSDKLoaded, searchParams]);
 
   // Check for new patterns every minute
   useEffect(() => {

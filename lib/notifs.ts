@@ -21,15 +21,18 @@ export async function sendFrameNotification({
   title,
   body,
   notificationDetails: providedNotificationDetails,
+  patternId,
 }: {
   fid: number;
   title: string;
   body: string;
   notificationDetails?: FrameNotificationDetails;
+  patternId?: number;
 }): Promise<SendFrameNotificationResult> {
   console.log(`[NOTIF] Attempting to send notification to user ${fid}`);
   console.log(`[NOTIF] Title: ${title}`);
   console.log(`[NOTIF] Body: ${body}`);
+  console.log(`[NOTIF] Pattern ID: ${patternId}`);
   
   // Use provided notification details or get from Redis
   const notificationDetails = providedNotificationDetails || await getUserNotificationDetails(fid);
@@ -43,11 +46,16 @@ export async function sendFrameNotification({
   console.log(`[NOTIF] Token present: ${!!notificationDetails.token}`);
   console.log(`[NOTIF] Token from Redis: ${notificationDetails.token}`);
 
+  // Construct target URL with pattern ID if provided
+  const targetUrl = patternId 
+    ? `${appUrl}?patternId=${patternId}`
+    : appUrl;
+
   const notificationRequest = {
     notificationId: crypto.randomUUID(),
     title,
     body,
-    targetUrl: appUrl,
+    targetUrl,
     tokens: [notificationDetails.token],
   } satisfies SendNotificationRequest;
 

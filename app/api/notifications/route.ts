@@ -8,38 +8,25 @@ import { getCurrentPatternId, getNextPatternId } from "@/app/data/pattern-list";
 export const dynamic = "force-dynamic";
 
 /**
- * Cron job endpoint that generates a new pattern and sends notifications
+ * Send notifications to all users about the next pattern
  */
 export async function GET() {
   console.log("[CRON] Starting pattern generation");
+
   try {
+    // Initialize Redis client
     const redis = getRedisClient();
-    
-    // Get current pattern
-    const currentPatternId = await getCurrentPatternId(redis);
-    const currentPattern = await PatternService.getPatternById(currentPatternId);
-    
-    if (!currentPattern) {
-      throw new Error(`Pattern with ID ${currentPatternId} not found`);
-    }
+    PatternService.initialize(redis);
 
-    console.log("[CRON] Current pattern:", {
-      id: currentPattern.id,
-      title: currentPattern.title
-    });
-
-    // Get next pattern
-    const nextPatternId = await getNextPatternId(redis);
-    const nextPattern = await PatternService.getPatternById(nextPatternId);
-    
+    // Get the next pattern
+    const nextPattern = await PatternService.getNextPattern();
     if (!nextPattern) {
-      throw new Error(`Pattern with ID ${nextPatternId} not found`);
+      console.error("[CRON] Failed to get next pattern");
+      return NextResponse.json(
+        { error: "Failed to get next pattern" },
+        { status: 500 }
+      );
     }
-
-    console.log("[CRON] Next pattern:", {
-      id: nextPattern.id,
-      title: nextPattern.title
-    });
 
     // Get all users with notifications enabled
     const users = await getAllUsersWithNotifications();
@@ -54,6 +41,7 @@ export async function GET() {
           title: `${nextPattern.title}`,
           body: `Check out pattern ${nextPattern.id}`,
           notificationDetails: user.details,
+          patternId: nextPattern.id,
         });
 
         if (sendResult.state === "error") {
