@@ -39,7 +39,7 @@ export async function GET() {
         const sendResult = await sendFrameNotification({
           fid: user.fid,
           title: `${nextPattern.title}`,
-          body: `Check out pattern ${nextPattern.id}`,
+          body: `Check out pattern #${nextPattern.id}!!`,
           notificationDetails: user.details,
           patternId: nextPattern.id,
         });
