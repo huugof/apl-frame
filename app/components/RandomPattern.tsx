@@ -233,16 +233,8 @@ export default function RandomPattern() {
   /**
    * Open Warpcast compose dialog
    */
-  const openWarpcastUrl = useCallback(async () => {
-    try {
-      // Close the frame first
-      await sdk.actions.close();
-      
-      // Then open Warpcast compose dialog
-      await sdk.actions.openUrl("https://warpcast.com/~/compose");
-    } catch (error) {
-      console.error("Error opening Warpcast:", error);
-    }
+  const openWarpcastUrl = useCallback(() => {
+    sdk.actions.openUrl("https://warpcast.com/~/compose");
   }, []);
 
   /**
