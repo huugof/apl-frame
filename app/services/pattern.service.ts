@@ -26,16 +26,13 @@ export class PatternService {
         }
 
         const patternId = await getCurrentPatternId(PatternService.redis);
-        return {
-            id: patternId,
-            title: `Pattern ${patternId}`,
-            name: `Pattern ${patternId}`,
-            number: patternId,
-            problem: "Loading pattern...",
-            solution: "Loading pattern...",
-            relatedPatterns: "Loading related patterns...",
-            imagePrompt: "Loading image prompt..."
-        };
+        const pattern = await this.getPatternById(patternId);
+        
+        if (!pattern) {
+            throw new Error(`Pattern with ID ${patternId} not found`);
+        }
+        
+        return pattern;
     }
 
     /**
