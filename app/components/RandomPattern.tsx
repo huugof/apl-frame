@@ -27,6 +27,10 @@ interface FrameEvent {
   fid?: number;
 }
 
+interface RandomPatternProps {
+  initialPatternId?: number;
+}
+
 /**
  * Parse wikilinks from pattern text
  */
@@ -39,7 +43,7 @@ function parseWikilinks(text: string): Array<{ id: number; title: string }> {
   }));
 }
 
-export default function RandomPattern() {
+export default function RandomPattern({ initialPatternId }: RandomPatternProps) {
   const [pattern, setPattern] = useState<Pattern | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -220,7 +224,7 @@ export default function RandomPattern() {
     if (!pattern || !appUrl) return "";
     
     // Create the frame embed URL with the current pattern ID
-    const frameUrl = `${appUrl}?patternId=${pattern.id}`;
+    const frameUrl = `${appUrl}/frames/pattern/${pattern.id}`;
     
     // Create the Warpcast cast URL with the frame embed
     const warpcastUrl = new URL("https://warpcast.com/~/compose");
@@ -252,8 +256,8 @@ export default function RandomPattern() {
   useEffect(() => {
     const initializeFrame = async () => {
       try {
-        // Get pattern ID from URL if present
-        const patternId = searchParams.get("patternId");
+        // Get pattern ID from URL if present, otherwise use initialPatternId
+        const patternId = searchParams.get("patternId") || initialPatternId?.toString();
         
         // Load pattern first
         await loadPattern(patternId ? parseInt(patternId, 10) : undefined);
@@ -282,8 +286,10 @@ export default function RandomPattern() {
           // Tell the client we're ready and can hide the splash screen
           sdk.actions.ready();
 
-          // Prompt to add frame if not already added
-          promptAddFrame();
+          // Only prompt to add frame if we're not in an embedded view
+          if (!initialPatternId) {
+            promptAddFrame();
+          }
         }
       } catch (error) {
         console.error("[Frame] Failed to initialize frame:", error);
@@ -298,7 +304,7 @@ export default function RandomPattern() {
         sdk.removeAllListeners();
       }
     };
-  }, [isSDKLoaded, searchParams]);
+  }, [isSDKLoaded, searchParams, initialPatternId]);
 
   // Check for new patterns every minute
   useEffect(() => {
