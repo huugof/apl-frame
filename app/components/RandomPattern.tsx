@@ -223,25 +223,31 @@ export default function RandomPattern() {
     const frameUrl = `${appUrl}?patternId=${pattern.id}`;
     
     // Create the Warpcast cast URL with the frame embed
-    // Using the direct compose URL format that works better across platforms
     const warpcastUrl = new URL("https://warpcast.com/~/compose");
     warpcastUrl.searchParams.set("text", `Check out this pattern from A Pattern Language: ${pattern.title}`);
     warpcastUrl.searchParams.set("embeds[]", frameUrl);
-    warpcastUrl.searchParams.set("redirect", "true");
     
-    // Return the URL with the redirect parameter
     return warpcastUrl.toString();
   };
 
   /**
    * Handle share button click
    */
-  const handleShareClick = (e: MouseEvent<HTMLButtonElement>) => {
+  const handleShareClick = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     const shareUrl = generateShareUrl();
     if (shareUrl) {
-      // Use window.location.href instead of window.open for better mobile support
-      window.location.href = shareUrl;
+      try {
+        // Close the frame first
+        await sdk.actions.close();
+        
+        // Then redirect to Warpcast
+        window.location.href = shareUrl;
+      } catch (error) {
+        console.error("Error closing frame:", error);
+        // Fallback to direct navigation if frame closing fails
+        window.location.href = shareUrl;
+      }
     }
   };
 
