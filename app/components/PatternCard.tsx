@@ -2,17 +2,29 @@ import { Pattern } from "@/app/types";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 
-export interface PatternCardProps {
+/**
+ * Props for the PatternCard component
+ */
+interface PatternCardProps {
   pattern: Pattern;
   imageUrl: string | null;
   isLoading: boolean;
-  onGenerateImage: () => void;
+  onGenerateImage: () => Promise<void>;
+  relatedPatterns: Array<{ id: number; title: string }>;
+  onNavigateToPattern: (patternId: number) => Promise<void>;
 }
 
 /**
  * Card component to display a single pattern
  */
-export default function PatternCard({ pattern, imageUrl, isLoading, onGenerateImage }: PatternCardProps) {
+export default function PatternCard({ 
+  pattern, 
+  imageUrl, 
+  isLoading, 
+  onGenerateImage,
+  relatedPatterns,
+  onNavigateToPattern
+}: PatternCardProps) {
   // Format today's date
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -41,31 +53,56 @@ export default function PatternCard({ pattern, imageUrl, isLoading, onGenerateIm
       </div>
 
       {/* Pattern content */}
-      <div className="px-8">
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400">Problem:</h3>
-          <div className="mt-2 pl-4 text-gray-700 dark:text-gray-300 prose prose-gray dark:prose-invert border-l-2 border-gray-100 dark:border-gray-700">
-            <ReactMarkdown>{pattern.problem}</ReactMarkdown>
-          </div>
+      <div className="px-8 pb-8">
+        {/* Problem */}
+        <div className="mb-8">
+          <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-4">Problem</h3>
+          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{pattern.problem}</p>
         </div>
 
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400">Solution:</h3>
-          <div className="mt-2 pl-4 text-gray-700 dark:text-gray-300 prose prose-gray dark:prose-invert border-l-2 border-gray-100 dark:border-gray-700">
-            <ReactMarkdown>{pattern.solution}</ReactMarkdown>
-          </div>
+        {/* Solution */}
+        <div className="mb-8">
+          <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-4">Solution</h3>
+          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{pattern.solution}</p>
         </div>
 
-        <div className="mt-6">
-          {imageUrl && (
-            <div className="relative h-64 w-full">
-              <Image
-                src={imageUrl}
-                alt={`Visualization of ${pattern.title}`}
-                fill
-                className="object-cover rounded-lg"
-              />
+        {/* Related Patterns */}
+        {relatedPatterns.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-4">Related Patterns</h3>
+            <div className="flex flex-wrap gap-2">
+              {relatedPatterns.map((related) => (
+                <button
+                  key={related.id}
+                  onClick={() => onNavigateToPattern(related.id)}
+                  className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 
+                           rounded-full text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-800 
+                           transition-colors"
+                >
+                  {related.title} ({related.id})
+                </button>
+              ))}
             </div>
+          </div>
+        )}
+
+        {/* Image section */}
+        <div className="mt-8">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={`Visualization of ${pattern.title}`}
+              className="w-full rounded-lg shadow-lg"
+            />
+          ) : (
+            <button
+              onClick={onGenerateImage}
+              disabled={isLoading}
+              className="w-full py-3 px-4 bg-blue-500 text-white rounded-lg font-medium
+                       hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? "Generating image..." : "Generate image"}
+            </button>
           )}
         </div>
       </div>

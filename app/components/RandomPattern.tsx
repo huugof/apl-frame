@@ -3,7 +3,7 @@
  */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, MouseEvent } from "react";
 import { Pattern } from "@/app/types";
 import PatternCard from "./PatternCard";
 import sdk from "@farcaster/frame-sdk";
@@ -26,6 +26,18 @@ interface FrameEvent {
   fid?: number;
 }
 
+/**
+ * Parse wikilinks from pattern text
+ */
+function parseWikilinks(text: string): Array<{ id: number; title: string }> {
+  const wikilinkRegex = /\[\[(.*?) \((\d+)\)\]\]/g;
+  const matches = text.matchAll(wikilinkRegex);
+  return Array.from(matches).map(match => ({
+    title: match[1],
+    id: parseInt(match[2], 10)
+  }));
+}
+
 export default function RandomPattern() {
   const [pattern, setPattern] = useState<Pattern | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -33,9 +45,14 @@ export default function RandomPattern() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [hasAddedFrame, setHasAddedFrame] = useState(false);
   const [newPatternAvailable, setNewPatternAvailable] = useState(false);
+  const [relatedPatterns, setRelatedPatterns] = useState<Array<{ id: number; title: string }>>([]);
 
-  const loadPattern = async () => {
+  /**
+   * Load a pattern by ID
+   */
+  const loadPattern = async (patternId?: number) => {
     try {
+      setIsLoading(true);
       const response = await fetch("/api/pattern/current");
       if (!response.ok) {
         throw new Error("Failed to load pattern");
@@ -43,32 +60,42 @@ export default function RandomPattern() {
       const data = await response.json();
       setPattern(data.pattern);
       setNewPatternAvailable(false);
-      // Reset image when pattern changes
-      setImageUrl(null);
+      
+      // Parse related patterns from wikilinks
+      const related = parseWikilinks(data.pattern.relatedPatterns);
+      setRelatedPatterns(related);
     } catch (error) {
       console.error("Failed to load pattern:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  /**
+   * Generate an image for the current pattern
+   */
   const generatePatternImage = async () => {
     if (!pattern) return;
-
-    setIsLoading(true);
+    
     try {
-      const response = await fetch("/api/generate-image", {
+      setIsLoading(true);
+      const response = await fetch("/api/frame", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          prompt: `${pattern.imagePrompt}, professional architectural rendering, detailed, realistic`,
+          untrustedData: {
+            buttonIndex: 2,
+            patternId: pattern.id
+          }
         }),
       });
-
+      
       if (!response.ok) {
         throw new Error("Failed to generate image");
       }
-
+      
       const data = await response.json();
       setImageUrl(data.imageUrl);
     } catch (error) {
@@ -76,6 +103,51 @@ export default function RandomPattern() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  /**
+   * Navigate to a related pattern
+   */
+  const navigateToPattern = async (patternId: number) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/frame", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          untrustedData: {
+            buttonIndex: 1,
+            patternId
+          }
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to load pattern");
+      }
+      
+      const data = await response.json();
+      setPattern(data.pattern);
+      setImageUrl(null);
+      
+      // Parse related patterns from wikilinks
+      const related = parseWikilinks(data.pattern.relatedPatterns);
+      setRelatedPatterns(related);
+    } catch (error) {
+      console.error("Failed to navigate to pattern:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Handle new pattern button click
+   */
+  const handleNewPatternClick = async (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    await loadPattern();
   };
 
   /**
@@ -218,7 +290,7 @@ export default function RandomPattern() {
     <div className="relative">
       {newPatternAvailable && (
         <button
-          onClick={loadPattern}
+          onClick={handleNewPatternClick}
           className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 
                    px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded-full shadow-lg
                    hover:bg-blue-600 transition-colors"
@@ -231,6 +303,8 @@ export default function RandomPattern() {
         imageUrl={imageUrl}
         isLoading={isLoading}
         onGenerateImage={generatePatternImage}
+        relatedPatterns={relatedPatterns}
+        onNavigateToPattern={navigateToPattern}
       />
     </div>
   );

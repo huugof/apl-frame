@@ -10,13 +10,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     try {
         const data = await req.json();
         const { untrustedData } = data;
-        const { buttonIndex } = untrustedData;
+        const { buttonIndex, patternId } = untrustedData;
         
         // Initialize Redis client
         const redis = getRedisClient();
         PatternService.initialize(redis);
         
-        const pattern = await PatternService.getDailyPattern();
+        // Get the requested pattern or default to daily pattern
+        const pattern = patternId 
+            ? await PatternService.getPatternById(parseInt(patternId, 10))
+            : await PatternService.getDailyPattern();
+            
+        if (!pattern) {
+            return NextResponse.json({
+                error: "Pattern not found",
+            }, { status: 404 });
+        }
         
         // Base response with hideSplashScreen set to true
         const baseResponse = {
