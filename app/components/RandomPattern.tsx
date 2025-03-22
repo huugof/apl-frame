@@ -241,11 +241,11 @@ export default function RandomPattern() {
         // Close the frame first
         await sdk.actions.close();
         
-        // Then redirect to Warpcast
-        window.location.href = shareUrl;
+        // Then open Warpcast using the Frame SDK
+        await sdk.actions.openUrl(shareUrl);
       } catch (error) {
-        console.error("Error closing frame:", error);
-        // Fallback to direct navigation if frame closing fails
+        console.error("Error handling share:", error);
+        // Fallback to direct navigation if SDK methods fail
         window.location.href = shareUrl;
       }
     }
