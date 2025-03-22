@@ -223,10 +223,13 @@ export default function RandomPattern() {
     const frameUrl = `${appUrl}?patternId=${pattern.id}`;
     
     // Create the Warpcast cast URL with the frame embed
+    // Using the direct compose URL format that works better across platforms
     const warpcastUrl = new URL("https://warpcast.com/~/compose");
     warpcastUrl.searchParams.set("text", `Check out this pattern from A Pattern Language: ${pattern.title}`);
     warpcastUrl.searchParams.set("embeds[]", frameUrl);
+    warpcastUrl.searchParams.set("redirect", "true");
     
+    // Return the URL with the redirect parameter
     return warpcastUrl.toString();
   };
 
@@ -237,7 +240,8 @@ export default function RandomPattern() {
     e.preventDefault();
     const shareUrl = generateShareUrl();
     if (shareUrl) {
-      window.open(shareUrl, "_blank");
+      // Use window.location.href instead of window.open for better mobile support
+      window.location.href = shareUrl;
     }
   };
 
