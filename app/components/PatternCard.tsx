@@ -80,7 +80,7 @@ export default function PatternCard({
                            transition-colors"
                   title={related.title}
                 >
-                  {truncateString(related.title, 25)} ({related.id})
+                  {truncateString(related.title, 18)} ({related.id})
                 </button>
               ))}
             </div>

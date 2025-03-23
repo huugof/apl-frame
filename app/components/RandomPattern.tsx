@@ -372,7 +372,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         </button>
       )}
       
-      <div ref={scrollContainerRef} className="h-[calc(100vh-75px)] overflow-y-auto shadow-lg rounded-b-[2rem]">
+      <div ref={scrollContainerRef} className="h-[calc(100vh-90px)] overflow-y-auto shadow-lg rounded-b-[2rem]">
         <div className="flex flex-col items-center">
           <PatternCard
             pattern={pattern}
@@ -385,10 +385,16 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         </div>
       </div>
 
-      <div className="fixed bottom-6 left-0 right-0 flex justify-center">
+      <div className="fixed bottom-7 left-0 right-0 flex justify-center gap-4">
+        <button
+          onClick={() => loadPattern()}
+          className="px-4 py-3 bg-[#fff] text-white shadow-xl rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
+        >
+          <span className="text-sm font-medium">✨</span>
+        </button>
         <button
           onClick={handleShareClick}
-          className="px-10 py-2 bg-[#6a6a6a] text-white rounded-full hover:bg-green-600 transition-colors"
+          className="px-10 py-3 bg-[#696969] text-white shadow-xl rounded-full hover:bg-green-600 transition-colors"
         >
           Share!
         </button>

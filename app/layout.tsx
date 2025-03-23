@@ -53,7 +53,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${garamond.variable} antialiased h-full`}>
-      <body className={`${inter.className} min-h-full bg-white`}>{children}</body>
+      <body className={`${inter.className} min-h-full`}>{children}</body>
     </html>
   );
 }

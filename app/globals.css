@@ -4,12 +4,12 @@
 
 :root {
   --foreground: #000;
-  --background: #fff;
+  --background: #e2e2e2;
 }
 
 html {
   height: 100%;
-  background-color: white;
+  background-color: #e2e2e2;
 }
 
 body {
@@ -22,8 +22,8 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Ensure white background extends to the bottom on mobile */
+/* Ensure red background extends to the bottom on mobile */
 #__next {
   min-height: 100%;
-  background-color: white;
+  background-color: #e2e2e2;
 }
