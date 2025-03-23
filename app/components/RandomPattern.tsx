@@ -3,7 +3,7 @@
  */
 "use client";
 
-import { useState, useEffect, MouseEvent, useCallback } from "react";
+import { useState, useEffect, MouseEvent, useCallback, useRef } from "react";
 import { Pattern } from "@/app/types";
 import PatternCard from "./PatternCard";
 import sdk from "@farcaster/frame-sdk";
@@ -53,6 +53,16 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
   const [relatedPatterns, setRelatedPatterns] = useState<Array<{ id: number; title: string }>>([]);
   const searchParams = useSearchParams();
   const appUrl = process.env.NEXT_PUBLIC_URL;
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [shouldScrollToTop, setShouldScrollToTop] = useState(false);
+
+  // Effect to handle scrolling when pattern changes
+  useEffect(() => {
+    if (shouldScrollToTop && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+      setShouldScrollToTop(false);
+    }
+  }, [shouldScrollToTop]);
 
   /**
    * Load a pattern by ID
@@ -155,19 +165,14 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
       // Parse related patterns from wikilinks
       const related = parseWikilinks(data.pattern.relatedPatterns);
       setRelatedPatterns(related);
+
+      // Trigger scroll after state updates
+      setShouldScrollToTop(true);
     } catch (error) {
       console.error("Failed to navigate to pattern:", error);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  /**
-   * Handle new pattern button click
-   */
-  const handleNewPatternClick = async (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    await loadPattern();
   };
 
   /**
@@ -250,6 +255,14 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
   const handleShareClick = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     await openWarpcastUrl();
+  };
+
+  /**
+   * Handle new pattern button click
+   */
+  const handleNewPatternClick = async (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    await loadPattern();
   };
 
   // Initialize Frame SDK and load pattern
@@ -347,7 +360,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
   }
 
   return (
-    <div className="relative">
+    <div className="relative h-screen">
       {newPatternAvailable && (
         <button
           onClick={handleNewPatternClick}
@@ -359,31 +372,26 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         </button>
       )}
       
-      <div className="flex flex-col items-center gap-4">
-        <PatternCard
-          pattern={pattern}
-          imageUrl={imageUrl}
-          isLoading={isLoading}
-          onGenerateImage={generatePatternImage}
-          onNavigateToPattern={navigateToPattern}
-          relatedPatterns={relatedPatterns}
-        />
-        
-        <div className="flex gap-4">
-          <button
-            onClick={handleNewPatternClick}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            New Pattern
-          </button>
-          
-          <button
-            onClick={handleShareClick}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-          >
-            Share on Warpcast
-          </button>
+      <div ref={scrollContainerRef} className="h-[calc(100vh-75px)] overflow-y-auto shadow-lg rounded-b-[2rem]">
+        <div className="flex flex-col items-center">
+          <PatternCard
+            pattern={pattern}
+            imageUrl={imageUrl}
+            isLoading={isLoading}
+            onGenerateImage={generatePatternImage}
+            onNavigateToPattern={navigateToPattern}
+            relatedPatterns={relatedPatterns}
+          />
         </div>
+      </div>
+
+      <div className="fixed bottom-6 left-0 right-0 flex justify-center">
+        <button
+          onClick={handleShareClick}
+          className="px-10 py-2 bg-[#6a6a6a] text-white rounded-full hover:bg-green-600 transition-colors"
+        >
+          Share!
+        </button>
       </div>
     </div>
   );
