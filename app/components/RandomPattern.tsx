@@ -222,10 +222,18 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
           await saveNotificationDetails(result.notificationDetails, result.fid);
         }
       } else if (result.reason) {
-        console.log("Frame not added:", result.reason);
+        console.log("[Frame] Frame not added:", result.reason);
+        // If rejected by user, we should keep the modal open
+        if (result.reason === "AddFrame.RejectedByUser") {
+          return;
+        }
       }
     } catch (error) {
-      console.error("Error adding frame:", error);
+      console.error("[Frame] Error adding frame:", error);
+      // If rejected by user, we should keep the modal open
+      if (error instanceof Error && error.message.includes("RejectedByUser")) {
+        return;
+      }
     }
   };
 
@@ -751,7 +759,10 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
                     <button
                       onClick={async () => {
                         await promptAddFrame();
-                        setIsBookmarksModalOpen(false);
+                        // Only close the modal if the frame was successfully added
+                        if (hasAddedFrame) {
+                          setIsBookmarksModalOpen(false);
+                        }
                       }}
                       className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
                     >
