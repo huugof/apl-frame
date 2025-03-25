@@ -10,6 +10,18 @@ import sdk from "@farcaster/frame-sdk";
 import { sendFrameNotification } from "@/lib/notifs";
 import { useSearchParams } from "next/navigation";
 
+// Add keyframe animation for bouncing arrow
+const bounceKeyframes = `
+@keyframes bounce {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-10px);
+  }
+}
+`;
+
 interface NotificationDetails {
   url: string;
   token: string;
@@ -66,12 +78,14 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRelatedModalOpen, setIsRelatedModalOpen] = useState(false);
   const [isBookmarksModalOpen, setIsBookmarksModalOpen] = useState(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [relatedPatterns, setRelatedPatterns] = useState<Array<{ id: number; title: string }>>([]);
   const [bookmarkedPatterns, setBookmarkedPatterns] = useState<Array<{ id: number; title: string }>>([]);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const relatedModalRef = useRef<HTMLDivElement>(null);
   const bookmarksModalRef = useRef<HTMLDivElement>(null);
+  const aboutModalRef = useRef<HTMLDivElement>(null);
   const buttonWrapperRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const appUrl = process.env.NEXT_PUBLIC_URL;
@@ -90,16 +104,19 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
       if (bookmarksModalRef.current && !bookmarksModalRef.current.contains(event.target as Node)) {
         setIsBookmarksModalOpen(false);
       }
+      if (aboutModalRef.current && !aboutModalRef.current.contains(event.target as Node)) {
+        setIsAboutModalOpen(false);
+      }
     };
 
-    if (isModalOpen || isRelatedModalOpen || isBookmarksModalOpen) {
+    if (isModalOpen || isRelatedModalOpen || isBookmarksModalOpen || isAboutModalOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isModalOpen, isRelatedModalOpen, isBookmarksModalOpen]);
+  }, [isModalOpen, isRelatedModalOpen, isBookmarksModalOpen, isAboutModalOpen]);
 
   /**
    * Load a pattern by ID
@@ -222,18 +239,10 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
           await saveNotificationDetails(result.notificationDetails, result.fid);
         }
       } else if (result.reason) {
-        console.log("[Frame] Frame not added:", result.reason);
-        // If rejected by user, we should keep the modal open
-        if (result.reason === "AddFrame.RejectedByUser") {
-          return;
-        }
+        console.log("Frame not added:", result.reason);
       }
     } catch (error) {
-      console.error("[Frame] Error adding frame:", error);
-      // If rejected by user, we should keep the modal open
-      if (error instanceof Error && error.message.includes("RejectedByUser")) {
-        return;
-      }
+      console.error("Error adding frame:", error);
     }
   };
 
@@ -554,6 +563,9 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
 
   return (
     <div className="relative min-h-screen bg-white">
+      {/* Inject keyframe animation */}
+      <style dangerouslySetInnerHTML={{ __html: bounceKeyframes }} />
+
       {newPatternAvailable && (
         <button
           onClick={handleNewPatternClick}
@@ -565,7 +577,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         </button>
       )}
       
-      <div className={`pb-8 transition-all duration-300 ${isModalOpen || isRelatedModalOpen ? "blur-sm" : ""}`}>
+      <div className={`pb-8 transition-all duration-300 ${isModalOpen || isRelatedModalOpen || isAboutModalOpen || (!hasAddedFrame && isBookmarksModalOpen) ? "blur-sm" : ""}`}>
         <div className="flex flex-col items-center">
           <PatternCard
             pattern={pattern}
@@ -589,11 +601,11 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
           <div 
             className="bg-white rounded-[24px] shadow-2xl w-full p-6 transform transition-transform duration-350 ease-out origin-bottom" 
             style={{ 
-              height: "55vh",
+              height: "45vh",
               transform: isModalOpen ? "scaleY(1)" : "scaleY(0)"
             }}
           >
-            <div className={`flex flex-col items-center gap-4 transition-opacity duration-350 ${
+            <div className={`flex flex-col h-full transition-opacity duration-350 ${
               isModalOpen ? "opacity-100" : "opacity-0"
             }`}>
               {pattern && (
@@ -604,27 +616,12 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
                   </div>
                 </>
               )}
-              <div className="w-full space-y-2">
+              <div className="w-full flex-1 space-y-2 overflow-y-auto">
                 <button
                   onClick={handleShareClick}
                   className="px-10 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors w-full"
                 >
                   Share!
-                </button>
-                <button
-                  onClick={async () => {
-                    if (!hasAddedFrame) {
-                      await promptAddFrame();
-                    }
-                    if (hasAddedFrame) {
-                      toggleBookmark();
-                    }
-                    setIsModalOpen(false);
-                  }}
-                  className="px-10 py-3 bg-[#e2e2e2] text-black rounded-xl hover:bg-blue-700 transition-colors w-full flex items-center justify-center gap-2"
-                >
-                  <span>{isBookmarked ? "Remove Bookmark" : "Add Bookmark"}</span>
-                  <span>{isBookmarked ? "🔖" : "📑"}</span>
                 </button>
                 <button
                   onClick={() => {
@@ -636,13 +633,16 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
                   Today's Pattern
                 </button>
                 <button
-                  onClick={() => sdk.actions.openUrl("https://apl-frame.vercel.app/about")}
+                  onClick={() => {
+                    setIsAboutModalOpen(true);
+                    setIsModalOpen(false);
+                  }}
                   className="px-10 py-3 bg-[#e2e2e2] text-black rounded-xl hover:bg-blue-700 transition-colors w-full"
                 >
                   About
                 </button>
               </div>
-              <div className="mt-auto text-sm text-gray-500">
+              <div className="mt-4 text-sm text-gray-500 text-center">
                 Next pattern in {getHoursUntilNext()} hours
               </div>
             </div>
@@ -697,11 +697,62 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         </div>
       </div>
 
-      {/* Bookmarks Modal */}
+      {/* Add Frame Modal */}
+      <div 
+        className={`fixed bottom-7 left-0 right-0 flex justify-center z-20 w-full transition-opacity duration-350 ${
+          !hasAddedFrame && isBookmarksModalOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        {/* Red arrow pointing up */}
+        <div 
+          className="fixed top-4 right-[5%] transform -translate-y-0"
+          style={{
+            animation: "bounce 1s infinite"
+          }}
+        >
+          <svg 
+            width="48" 
+            height="48" 
+            viewBox="0 0 24 24" 
+            version="1.1" 
+            xmlns="http://www.w3.org/2000/svg" 
+            style={{
+              fillRule: "evenodd",
+              clipRule: "evenodd",
+              strokeLinejoin: "round",
+              strokeMiterlimit: 2,
+              fill: "#ef4444"
+            }}
+          >
+            <g transform="matrix(6.12323e-17,-1,1,6.12323e-17,-0.016,24.016)">
+              <path d="M12.068,0.016L8.351,3.714L13.614,9L-0,9L-0,15L13.614,15L8.319,20.317L12.037,24.016L24,12L12.068,0.016Z" style={{fillRule: "nonzero"}}/>
+            </g>
+          </svg>
+        </div>
+        
+        <div className="w-[90%] mx-auto relative">
+          <div 
+            className="bg-white rounded-[24px] shadow-2xl w-full p-6 transform transition-transform duration-350 ease-out origin-bottom" 
+            style={{ 
+              height: "fit-content",
+              transform: !hasAddedFrame && isBookmarksModalOpen ? "scaleY(1)" : "scaleY(0)"
+            }}
+          >
+            <div className="flex flex-col items-center gap-6 py-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Your Bookmarks</h2>
+              <div className="text-xl text-gray-800 text-center flex flex-col items-center gap-3">
+                <span>Please add the frame to save bookmarks.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bookmarks Modal - Update to only show when frame is added */}
       <div 
         ref={bookmarksModalRef}
         className={`fixed bottom-7 left-0 right-0 flex justify-center z-20 w-full transition-opacity duration-350 ${
-          isBookmarksModalOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          hasAddedFrame && isBookmarksModalOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
         <div className="w-[90%] mx-auto">
@@ -759,10 +810,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
                     <button
                       onClick={async () => {
                         await promptAddFrame();
-                        // Only close the modal if the frame was successfully added
-                        if (hasAddedFrame) {
-                          setIsBookmarksModalOpen(false);
-                        }
+                        setIsBookmarksModalOpen(false);
                       }}
                       className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
                     >
@@ -776,7 +824,56 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         </div>
       </div>
 
-      {/* Bottom Toolbar */}
+      {/* About Modal */}
+      <div 
+        ref={aboutModalRef}
+        className={`fixed bottom-7 left-0 right-0 flex justify-center z-20 w-full transition-opacity duration-350 ${
+          isAboutModalOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <div className="w-[90%] mx-auto">
+          <div 
+            className="bg-white rounded-[24px] shadow-2xl w-full p-6 transform transition-transform duration-350 ease-out origin-bottom" 
+            style={{ 
+              height: "45vh",
+              transform: isAboutModalOpen ? "scaleY(1)" : "scaleY(0)"
+            }}
+          >
+            <div className={`flex flex-col h-full transition-opacity duration-350 ${
+              isAboutModalOpen ? "opacity-100" : "opacity-0"
+            }`}>
+              <div className="text-center mb-2">
+                <h2 className="text-2xl font-bold text-gray-800">About</h2>
+              </div>
+              <div className="w-full flex-1 overflow-y-auto text-center space-y-4 px-1">
+                <p className="text-gray-700">
+                  A Pattern Language is a seminal work by Christopher Alexander that presents a practical architectural theory based on the observation that most beautiful places in the world were not designed by architects but emerged from the collective wisdom of generations of builders and inhabitants.
+                </p>
+                <div className="space-y-2">
+                  <p className="text-gray-600 text-sm">Learn more about the book:</p>
+                  <button
+                    onClick={() => sdk.actions.openUrl("https://www.patternlanguage.com/")}
+                    className="text-blue-600 hover:underline text-sm"
+                  >
+                    patternlanguage.com
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-gray-600 text-sm">MD version by:</p>
+                  <button
+                    onClick={() => sdk.actions.openUrl("https://github.com/zenodotus280/apl-md/tree/master")}
+                    className="text-blue-600 hover:underline text-sm"
+                  >
+                    zenodotus280/apl-md
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Toolbar - Update bookmark button click handler */}
       <div className="fixed bottom-7 left-0 right-0 flex justify-center">
         <div ref={buttonWrapperRef} className="w-[90%] flex items-center justify-between bg-[#f5f5f5] px-6 py-3 rounded-full shadow-xl">
           <button
