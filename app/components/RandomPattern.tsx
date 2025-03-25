@@ -712,24 +712,53 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
                 <h2 className="text-2xl font-bold text-gray-800">Your Bookmarks</h2>
               </div>
               <div className="w-full overflow-y-auto max-h-[calc(80vh-120px)]">
-                <div className="flex flex-wrap gap-2">
-                  {bookmarkedPatterns.map((pattern) => (
+                {hasAddedFrame ? (
+                  <>
+                    <div className="mb-4">
+                      <button
+                        onClick={async () => {
+                          await toggleBookmark();
+                          setIsBookmarksModalOpen(false);
+                        }}
+                        className="w-full px-6 py-3 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <span>{isBookmarked ? "Remove from Bookmarks" : "Add to Bookmarks"}</span>
+                        <span>{isBookmarked ? "🔖" : "📑"}</span>
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {bookmarkedPatterns.map((pattern) => (
+                        <button
+                          key={pattern.id}
+                          onClick={() => {
+                            navigateToPattern(pattern.id);
+                            setIsBookmarksModalOpen(false);
+                          }}
+                          className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-200 transition-colors"
+                          title={pattern.title}
+                        >
+                          {pattern.id}. {truncateString(pattern.title, 18)}
+                        </button>
+                      ))}
+                      {bookmarkedPatterns.length === 0 && (
+                        <p className="text-center text-gray-500 w-full">No bookmarked patterns yet</p>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center gap-4">
+                    <p className="text-center text-gray-600">Add frame to bookmark patterns</p>
                     <button
-                      key={pattern.id}
-                      onClick={() => {
-                        navigateToPattern(pattern.id);
+                      onClick={async () => {
+                        await promptAddFrame();
                         setIsBookmarksModalOpen(false);
                       }}
-                      className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-200 transition-colors"
-                      title={pattern.title}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
                     >
-                      {pattern.id}. {truncateString(pattern.title, 18)}
+                      Add Frame
                     </button>
-                  ))}
-                  {bookmarkedPatterns.length === 0 && (
-                    <p className="text-center text-gray-500 w-full">No bookmarked patterns yet</p>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -738,30 +767,28 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
 
       {/* Bottom Toolbar */}
       <div className="fixed bottom-7 left-0 right-0 flex justify-center">
-        <div ref={buttonWrapperRef} className="w-[90%] flex items-center gap-4 bg-[#f5f5f5] px-6 py-3 rounded-full shadow-xl">
+        <div ref={buttonWrapperRef} className="w-[90%] flex items-center justify-between bg-[#f5f5f5] px-6 py-3 rounded-full shadow-xl">
           <button
             onClick={() => {
               setIsBookmarksModalOpen(true);
             }}
-            className={`px-4 py-3 ${
-              isBookmarked ? "bg-blue-100" : "bg-[#fff]"
-            } text-black shadow-xl rounded-full flex items-center gap-2 hover:bg-gray-50 transition-colors`}
+            className={`px-5 py-3 ${
+              isBookmarked ? "bg-blue-100" : "bg-[#f5f5f5]"
+            } text-black shadow-lg rounded-full flex items-center gap-2 hover:bg-gray-50 transition-colors`}
             aria-label="View bookmarks"
           >
             <span className="text-sm font-medium">✨</span>
-            {hasAddedFrame && (
-              <span className="text-sm font-medium text-gray-600">{bookmarkedPatterns.length}</span>
-            )}
+            <span className="text-sm font-medium text-gray-600">{bookmarkedPatterns.length}</span>
           </button>
           <button
             onClick={() => setIsRelatedModalOpen(!isRelatedModalOpen)}
-            className="px-4 py-3 bg-[#fff] text-white shadow-xl rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
+            className="px-5 py-3 bg-[#f5f5f5] text-white rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
           >
             <img src="/related.svg" alt="Related patterns" className="w-5 h-5" />
           </button>
           <button
             onClick={() => setIsModalOpen(!isModalOpen)}
-            className="px-4 py-3 bg-[#fff] text-white shadow-xl rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
+            className="px-5 py-3 bg-[#f5f5f5] text-white rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
             aria-label="Open menu"
           >
             <img src="/hamburger.svg" alt="Menu" className="w-5 h-5" />
