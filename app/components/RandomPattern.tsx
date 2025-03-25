@@ -32,6 +32,19 @@ interface RandomPatternProps {
 }
 
 /**
+ * Truncates a string to a maximum length and adds an ellipsis if needed
+ * @param str - The string to truncate
+ * @param maxLength - The maximum length before truncation
+ * @returns The truncated string with ellipsis if needed
+ */
+function truncateString(str: string, maxLength: number): string {
+  if (str.length <= maxLength) {
+    return str;
+  }
+  return `${str.slice(0, maxLength - 3)}...`;
+}
+
+/**
  * Parse wikilinks from pattern text
  */
 function parseWikilinks(text: string): Array<{ id: number; title: string }> {
@@ -50,19 +63,36 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [hasAddedFrame, setHasAddedFrame] = useState(false);
   const [newPatternAvailable, setNewPatternAvailable] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRelatedModalOpen, setIsRelatedModalOpen] = useState(false);
   const [relatedPatterns, setRelatedPatterns] = useState<Array<{ id: number; title: string }>>([]);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const relatedModalRef = useRef<HTMLDivElement>(null);
+  const buttonWrapperRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const appUrl = process.env.NEXT_PUBLIC_URL;
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [shouldScrollToTop, setShouldScrollToTop] = useState(false);
 
-  // Effect to handle scrolling when pattern changes
+  /**
+   * Handle clicking outside the modals to close them
+   */
   useEffect(() => {
-    if (shouldScrollToTop && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
-      setShouldScrollToTop(false);
+    const handleClickOutside = (event: globalThis.MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setIsModalOpen(false);
+      }
+      if (relatedModalRef.current && !relatedModalRef.current.contains(event.target as Node)) {
+        setIsRelatedModalOpen(false);
+      }
+    };
+
+    if (isModalOpen || isRelatedModalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
     }
-  }, [shouldScrollToTop]);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isModalOpen, isRelatedModalOpen]);
 
   /**
    * Load a pattern by ID
@@ -165,9 +195,6 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
       // Parse related patterns from wikilinks
       const related = parseWikilinks(data.pattern.relatedPatterns);
       setRelatedPatterns(related);
-
-      // Trigger scroll after state updates
-      setShouldScrollToTop(true);
     } catch (error) {
       console.error("Failed to navigate to pattern:", error);
     } finally {
@@ -255,6 +282,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
   const handleShareClick = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     await openWarpcastUrl();
+    setIsModalOpen(false); // Close the modal after sharing
   };
 
   /**
@@ -263,6 +291,29 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
   const handleNewPatternClick = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     await loadPattern();
+  };
+
+  /**
+   * Handle generate image button click
+   */
+  const handleGenerateImageClick = async (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    await generatePatternImage();
+  };
+
+  /**
+   * Calculate hours until next pattern (2pm EST)
+   */
+  const getHoursUntilNext = (): number => {
+    const now = new Date();
+    const next = new Date();
+    next.setHours(14, 0, 0, 0); // 2pm EST
+    // If it's past 2pm, get next day at 2pm
+    if (now.getHours() >= 14) {
+      next.setDate(next.getDate() + 1);
+    }
+    const diffHours = Math.ceil((next.getTime() - now.getTime()) / (1000 * 60 * 60));
+    return diffHours;
   };
 
   // Initialize Frame SDK and load pattern
@@ -360,7 +411,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
   }
 
   return (
-    <div className="relative h-screen">
+    <div className="relative min-h-screen bg-white">
       {newPatternAvailable && (
         <button
           onClick={handleNewPatternClick}
@@ -372,7 +423,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         </button>
       )}
       
-      <div ref={scrollContainerRef} className="h-[calc(100vh-90px)] overflow-y-auto shadow-lg rounded-b-[2rem]">
+      <div className={`pb-8 transition-all duration-300 ${isModalOpen || isRelatedModalOpen ? "blur-sm" : ""}`}>
         <div className="flex flex-col items-center">
           <PatternCard
             pattern={pattern}
@@ -385,19 +436,132 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         </div>
       </div>
 
-      <div className="fixed bottom-7 left-0 right-0 flex justify-center gap-4">
-        <button
-          onClick={() => loadPattern()}
-          className="px-4 py-3 bg-[#fff] text-white shadow-xl rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
-        >
-          <span className="text-sm font-medium">✨</span>
-        </button>
-        <button
-          onClick={handleShareClick}
-          className="px-10 py-3 bg-[#696969] text-white shadow-xl rounded-full hover:bg-green-600 transition-colors"
-        >
-          Share!
-        </button>
+      {/* Menu Modal */}
+      <div 
+        ref={modalRef}
+        className={`fixed bottom-7 left-0 right-0 flex justify-center z-20 w-full transition-opacity duration-350 ${
+          isModalOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <div className="w-[90%] mx-auto">
+          <div 
+            className="bg-white rounded-[24px] shadow-2xl w-full p-6 transform transition-transform duration-350 ease-out origin-bottom" 
+            style={{ 
+              height: "45vh",
+              transform: isModalOpen ? "scaleY(1)" : "scaleY(0)"
+            }}
+          >
+            <div className={`flex flex-col items-center gap-4 transition-opacity duration-350 ${
+              isModalOpen ? "opacity-100" : "opacity-0"
+            }`}>
+              {pattern && (
+                <>
+                  <div className="text-center mb-2">
+                    <h2 className="text-2xl font-bold text-gray-800">Pattern {pattern.number}</h2>
+                    <h3 className="text-md text-gray-600 mt-1">{pattern.title}</h3>
+                  </div>
+                </>
+              )}
+              <div className="w-full space-y-2">
+                <button
+                  onClick={handleShareClick}
+                  className="px-10 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors w-full"
+                >
+                  Share!
+                </button>
+                <button
+                  onClick={() => {
+                    loadPattern();
+                    setIsModalOpen(false);
+                  }}
+                  className="px-10 py-3 bg-[#e2e2e2] text-black rounded-xl hover:bg-blue-700 transition-colors w-full"
+                >
+                  Today's Pattern
+                </button>
+                <button
+                  onClick={() => sdk.actions.openUrl("https://apl-frame.vercel.app/about")}
+                  className="px-10 py-3 bg-[#e2e2e2] text-black rounded-xl hover:bg-blue-700 transition-colors w-full"
+                >
+                  About
+                </button>
+              </div>
+              <div className="mt-auto text-sm text-gray-500">
+                Next pattern in {getHoursUntilNext()} hours
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Related Patterns Modal */}
+      <div 
+        ref={relatedModalRef}
+        className={`fixed bottom-7 left-0 right-0 flex justify-center z-20 w-full transition-opacity duration-350 ${
+          isRelatedModalOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <div className="w-[90%] mx-auto">
+          <div 
+            className="bg-white rounded-[24px] shadow-2xl w-full p-6 transform transition-transform duration-350 ease-out origin-bottom" 
+            style={{ 
+              maxHeight: "80vh",
+              height: "fit-content",
+              transform: isRelatedModalOpen ? "scaleY(1)" : "scaleY(0)"
+            }}
+          >
+            <div className={`flex flex-col items-center gap-4 transition-opacity duration-350 ${
+              isRelatedModalOpen ? "opacity-100" : "opacity-0"
+            }`}>
+              <div className="text-center mb-2">
+                <h2 className="text-2xl font-bold text-gray-800">Related Patterns</h2>
+              </div>
+              <div className="w-full overflow-y-auto max-h-[calc(80vh-120px)]">
+                <div className="flex flex-wrap gap-2">
+                  {relatedPatterns.map((related) => (
+                    <button
+                      key={related.id}
+                      onClick={() => {
+                        navigateToPattern(related.id);
+                        setIsRelatedModalOpen(false);
+                      }}
+                      className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-200 transition-colors"
+                      title={related.title}
+                    >
+                      {related.id}. {truncateString(related.title, 18)}
+                    </button>
+                  ))}
+                  {relatedPatterns.length === 0 && (
+                    <p className="text-center text-gray-500 w-full">No related patterns found</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="fixed bottom-7 left-0 right-0 flex justify-center">
+        <div ref={buttonWrapperRef} className="w-[90%] flex items-center gap-4 bg-[#f5f5f5] px-6 py-3 rounded-full shadow-xl">
+          <button
+            onClick={() => loadPattern()}
+            className="px-4 py-3 bg-[#fff] text-white shadow-xl rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-sm font-medium">✨</span>
+          </button>
+          <button
+            onClick={() => setIsRelatedModalOpen(!isRelatedModalOpen)}
+            className="px-4 py-3 bg-[#fff] text-white shadow-xl rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
+          >
+            <img src="/related.svg" alt="Related patterns" className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setIsModalOpen(!isModalOpen)}
+            className="px-4 py-3 bg-[#fff] text-white shadow-xl rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
+            aria-label="Open menu"
+          >
+            <img src="/hamburger.svg" alt="Menu" className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   );

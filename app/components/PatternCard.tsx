@@ -39,7 +39,7 @@ export default function PatternCard({
   onNavigateToPattern
 }: PatternCardProps) {
   return (
-    <div className="max-w-2xl mx-auto bg-white overflow-hidden rounded-2xl shadow-xl">
+    <div className="max-w-2xl mx-auto bg-white">
       {/* Blue gradient section with pattern info */}
       <div className="bg-gradient-to-br from-blue-50 to-blue-100 px-8 py-10">
         <div className="inline-block px-3 py-1 rounded-full bg-blue-100 mb-4">
@@ -66,7 +66,7 @@ export default function PatternCard({
           <p className="text-gray-700 whitespace-pre-line">{pattern.solution}</p>
         </div>
 
-        {/* Related Patterns */}
+        {/* Related Patterns
         {relatedPatterns.length > 0 && (
           <div className="mb-8">
             <h3 className="text-xl font-medium text-gray-900 mb-4">Related Patterns</h3>
@@ -85,7 +85,7 @@ export default function PatternCard({
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Image section */}
         <div className="mt-8">
