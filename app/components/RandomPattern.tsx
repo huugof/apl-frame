@@ -732,13 +732,29 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         </div>
       </div>
 
+      {/* Bottom Toolbar */}
       <div className="fixed bottom-7 left-0 right-0 flex justify-center">
         <div ref={buttonWrapperRef} className="w-[90%] flex items-center gap-4 bg-[#f5f5f5] px-6 py-3 rounded-full shadow-xl">
           <button
             onClick={() => loadPattern()}
-            className="px-4 py-3 bg-[#fff] text-white shadow-xl rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
+            className="px-4 py-3 bg-[#fff] text-black shadow-xl rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
+            aria-label="Load new pattern"
+          >
+            <span className="text-sm font-medium">🎲</span>
+          </button>
+          <button
+            onClick={() => {
+              setIsBookmarksModalOpen(true);
+            }}
+            className={`px-4 py-3 ${
+              isBookmarked ? "bg-blue-100" : "bg-[#fff]"
+            } text-black shadow-xl rounded-full flex items-center gap-2 hover:bg-gray-50 transition-colors`}
+            aria-label="View bookmarks"
           >
             <span className="text-sm font-medium">✨</span>
+            {hasAddedFrame && (
+              <span className="text-xs font-medium text-gray-600">{bookmarkedPatterns.length}</span>
+            )}
           </button>
           {hasAddedFrame && (
             <button
@@ -766,4 +782,4 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
       </div>
     </div>
   );
-} 
+}
