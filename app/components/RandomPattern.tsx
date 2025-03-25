@@ -581,7 +581,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
           <div 
             className="bg-white rounded-[24px] shadow-2xl w-full p-6 transform transition-transform duration-350 ease-out origin-bottom" 
             style={{ 
-              height: "45vh",
+              height: "55vh",
               transform: isModalOpen ? "scaleY(1)" : "scaleY(0)"
             }}
           >
@@ -604,6 +604,21 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
                   Share!
                 </button>
                 <button
+                  onClick={async () => {
+                    if (!hasAddedFrame) {
+                      await promptAddFrame();
+                    }
+                    if (hasAddedFrame) {
+                      toggleBookmark();
+                    }
+                    setIsModalOpen(false);
+                  }}
+                  className="px-10 py-3 bg-[#e2e2e2] text-black rounded-xl hover:bg-blue-700 transition-colors w-full flex items-center justify-center gap-2"
+                >
+                  <span>{isBookmarked ? "Remove Bookmark" : "Add Bookmark"}</span>
+                  <span>{isBookmarked ? "🔖" : "📑"}</span>
+                </button>
+                <button
                   onClick={() => {
                     loadPattern();
                     setIsModalOpen(false);
@@ -612,17 +627,6 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
                 >
                   Today's Pattern
                 </button>
-                {hasAddedFrame && (
-                  <button
-                    onClick={() => {
-                      setIsBookmarksModalOpen(true);
-                      setIsModalOpen(false);
-                    }}
-                    className="px-10 py-3 bg-[#e2e2e2] text-black rounded-xl hover:bg-blue-700 transition-colors w-full"
-                  >
-                    Your Bookmarks
-                  </button>
-                )}
                 <button
                   onClick={() => sdk.actions.openUrl("https://apl-frame.vercel.app/about")}
                   className="px-10 py-3 bg-[#e2e2e2] text-black rounded-xl hover:bg-blue-700 transition-colors w-full"
@@ -736,13 +740,6 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
       <div className="fixed bottom-7 left-0 right-0 flex justify-center">
         <div ref={buttonWrapperRef} className="w-[90%] flex items-center gap-4 bg-[#f5f5f5] px-6 py-3 rounded-full shadow-xl">
           <button
-            onClick={() => loadPattern()}
-            className="px-4 py-3 bg-[#fff] text-black shadow-xl rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
-            aria-label="Load new pattern"
-          >
-            <span className="text-sm font-medium">🎲</span>
-          </button>
-          <button
             onClick={() => {
               setIsBookmarksModalOpen(true);
             }}
@@ -753,18 +750,9 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
           >
             <span className="text-sm font-medium">✨</span>
             {hasAddedFrame && (
-              <span className="text-xs font-medium text-gray-600">{bookmarkedPatterns.length}</span>
+              <span className="text-sm font-medium text-gray-600">{bookmarkedPatterns.length}</span>
             )}
           </button>
-          {hasAddedFrame && (
-            <button
-              onClick={toggleBookmark}
-              className="px-4 py-3 bg-[#fff] text-white shadow-xl rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
-              aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
-            >
-              <span className="text-sm font-medium">{isBookmarked ? "🔖" : "📑"}</span>
-            </button>
-          )}
           <button
             onClick={() => setIsRelatedModalOpen(!isRelatedModalOpen)}
             className="px-4 py-3 bg-[#fff] text-white shadow-xl rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
