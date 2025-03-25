@@ -457,6 +457,13 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         if (sdk && !isSDKLoaded) {
           setIsSDKLoaded(true);
 
+          // Check if frame is already added
+          const context = await sdk.context;
+          if (context?.client?.added) {
+            console.log("[Frame] Frame is already added");
+            setHasAddedFrame(true);
+          }
+
           // Set up event listeners
           sdk.on("frameAdded", async (event: FrameEvent) => {
             console.log("[Frame] Frame added event received");
@@ -477,8 +484,8 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
           // Tell the client we're ready and can hide the splash screen
           sdk.actions.ready();
 
-          // Only prompt to add frame if we're not in an embedded view
-          if (!initialPatternId) {
+          // Only prompt to add frame if we're not in an embedded view and frame isn't already added
+          if (!initialPatternId && !context?.client?.added) {
             promptAddFrame();
           }
         }
