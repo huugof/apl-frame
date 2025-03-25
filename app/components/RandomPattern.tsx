@@ -65,9 +65,13 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
   const [newPatternAvailable, setNewPatternAvailable] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRelatedModalOpen, setIsRelatedModalOpen] = useState(false);
+  const [isBookmarksModalOpen, setIsBookmarksModalOpen] = useState(false);
   const [relatedPatterns, setRelatedPatterns] = useState<Array<{ id: number; title: string }>>([]);
+  const [bookmarkedPatterns, setBookmarkedPatterns] = useState<Array<{ id: number; title: string }>>([]);
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const relatedModalRef = useRef<HTMLDivElement>(null);
+  const bookmarksModalRef = useRef<HTMLDivElement>(null);
   const buttonWrapperRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const appUrl = process.env.NEXT_PUBLIC_URL;
@@ -83,16 +87,19 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
       if (relatedModalRef.current && !relatedModalRef.current.contains(event.target as Node)) {
         setIsRelatedModalOpen(false);
       }
+      if (bookmarksModalRef.current && !bookmarksModalRef.current.contains(event.target as Node)) {
+        setIsBookmarksModalOpen(false);
+      }
     };
 
-    if (isModalOpen || isRelatedModalOpen) {
+    if (isModalOpen || isRelatedModalOpen || isBookmarksModalOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isModalOpen, isRelatedModalOpen]);
+  }, [isModalOpen, isRelatedModalOpen, isBookmarksModalOpen]);
 
   /**
    * Load a pattern by ID
@@ -316,6 +323,126 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
     return diffHours;
   };
 
+  /**
+   * Check if the current pattern is bookmarked
+   */
+  const checkBookmarkStatus = useCallback(async (patternId: number) => {
+    try {
+      if (!hasAddedFrame) return;
+      
+      const user = await sdk.context;
+      if (!user?.user?.fid) return;
+      
+      const response = await fetch(`/api/bookmarks?patternId=${patternId}`, {
+        headers: {
+          "x-farcaster-fid": user.user.fid.toString(),
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to check bookmark status");
+      }
+      
+      const data = await response.json();
+      setIsBookmarked(data.isBookmarked);
+    } catch (error) {
+      console.error("Failed to check bookmark status:", error);
+    }
+  }, [hasAddedFrame]);
+
+  /**
+   * Toggle bookmark status for the current pattern
+   */
+  const toggleBookmark = async () => {
+    try {
+      if (!pattern || !hasAddedFrame) return;
+
+      const user = await sdk.context;
+      if (!user?.user?.fid) return;
+
+      const action = isBookmarked ? "remove" : "add";
+      const response = await fetch("/api/bookmarks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-farcaster-fid": user.user.fid.toString(),
+        },
+        body: JSON.stringify({
+          patternId: pattern.id,
+          action,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to toggle bookmark");
+      }
+      
+      setIsBookmarked(!isBookmarked);
+    } catch (error) {
+      console.error("Failed to toggle bookmark:", error);
+    }
+  };
+
+  // Check bookmark status when pattern changes
+  useEffect(() => {
+    if (pattern) {
+      checkBookmarkStatus(pattern.id);
+    }
+  }, [pattern, checkBookmarkStatus]);
+
+  /**
+   * Load bookmarked patterns
+   */
+  const loadBookmarkedPatterns = useCallback(async () => {
+    try {
+      if (!hasAddedFrame) return;
+
+      const user = await sdk.context;
+      if (!user?.user?.fid) return;
+
+      const response = await fetch("/api/bookmarks", {
+        headers: {
+          "x-farcaster-fid": user.user.fid.toString(),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to load bookmarks");
+      }
+
+      const data = await response.json();
+      const patterns = await Promise.all(
+        data.bookmarks.map(async (id: number) => {
+          const patternResponse = await fetch(`/api/pattern/${id}`);
+          if (!patternResponse.ok) return null;
+          const pattern = await patternResponse.json();
+          return {
+            id: pattern.id,
+            title: pattern.title,
+          };
+        })
+      );
+
+      setBookmarkedPatterns(patterns.filter((p): p is { id: number; title: string } => p !== null));
+    } catch (error) {
+      console.error("Failed to load bookmarks:", error);
+    }
+  }, [hasAddedFrame]);
+
+  // Load bookmarks when frame is added
+  useEffect(() => {
+    if (hasAddedFrame) {
+      loadBookmarkedPatterns();
+    }
+  }, [hasAddedFrame, loadBookmarkedPatterns]);
+
+  // Refresh bookmarks when bookmark status changes
+  useEffect(() => {
+    if (hasAddedFrame) {
+      loadBookmarkedPatterns();
+    }
+  }, [isBookmarked, hasAddedFrame, loadBookmarkedPatterns]);
+
   // Initialize Frame SDK and load pattern
   useEffect(() => {
     const initializeFrame = async () => {
@@ -478,6 +605,17 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
                 >
                   Today's Pattern
                 </button>
+                {hasAddedFrame && (
+                  <button
+                    onClick={() => {
+                      setIsBookmarksModalOpen(true);
+                      setIsModalOpen(false);
+                    }}
+                    className="px-10 py-3 bg-[#e2e2e2] text-black rounded-xl hover:bg-blue-700 transition-colors w-full"
+                  >
+                    Your Bookmarks
+                  </button>
+                )}
                 <button
                   onClick={() => sdk.actions.openUrl("https://apl-frame.vercel.app/about")}
                   className="px-10 py-3 bg-[#e2e2e2] text-black rounded-xl hover:bg-blue-700 transition-colors w-full"
@@ -540,6 +678,53 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         </div>
       </div>
 
+      {/* Bookmarks Modal */}
+      <div 
+        ref={bookmarksModalRef}
+        className={`fixed bottom-7 left-0 right-0 flex justify-center z-20 w-full transition-opacity duration-350 ${
+          isBookmarksModalOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <div className="w-[90%] mx-auto">
+          <div 
+            className="bg-white rounded-[24px] shadow-2xl w-full p-6 transform transition-transform duration-350 ease-out origin-bottom" 
+            style={{ 
+              maxHeight: "80vh",
+              height: "fit-content",
+              transform: isBookmarksModalOpen ? "scaleY(1)" : "scaleY(0)"
+            }}
+          >
+            <div className={`flex flex-col items-center gap-4 transition-opacity duration-350 ${
+              isBookmarksModalOpen ? "opacity-100" : "opacity-0"
+            }`}>
+              <div className="text-center mb-2">
+                <h2 className="text-2xl font-bold text-gray-800">Your Bookmarks</h2>
+              </div>
+              <div className="w-full overflow-y-auto max-h-[calc(80vh-120px)]">
+                <div className="flex flex-wrap gap-2">
+                  {bookmarkedPatterns.map((pattern) => (
+                    <button
+                      key={pattern.id}
+                      onClick={() => {
+                        navigateToPattern(pattern.id);
+                        setIsBookmarksModalOpen(false);
+                      }}
+                      className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-200 transition-colors"
+                      title={pattern.title}
+                    >
+                      {pattern.id}. {truncateString(pattern.title, 18)}
+                    </button>
+                  ))}
+                  {bookmarkedPatterns.length === 0 && (
+                    <p className="text-center text-gray-500 w-full">No bookmarked patterns yet</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="fixed bottom-7 left-0 right-0 flex justify-center">
         <div ref={buttonWrapperRef} className="w-[90%] flex items-center gap-4 bg-[#f5f5f5] px-6 py-3 rounded-full shadow-xl">
           <button
@@ -548,6 +733,15 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
           >
             <span className="text-sm font-medium">✨</span>
           </button>
+          {hasAddedFrame && (
+            <button
+              onClick={toggleBookmark}
+              className="px-4 py-3 bg-[#fff] text-white shadow-xl rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
+              aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+            >
+              <span className="text-sm font-medium">{isBookmarked ? "🔖" : "📑"}</span>
+            </button>
+          )}
           <button
             onClick={() => setIsRelatedModalOpen(!isRelatedModalOpen)}
             className="px-4 py-3 bg-[#fff] text-white shadow-xl rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"

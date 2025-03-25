@@ -148,3 +148,104 @@ export async function deleteUserNotificationDetails(
     throw error;
   }
 }
+
+function getUserBookmarksKey(fid: number): string {
+  return `apl-daily:user:${fid}:bookmarks`;
+}
+
+/**
+ * Get all bookmarked patterns for a user
+ */
+export async function getUserBookmarks(fid: number): Promise<number[]> {
+  try {
+    const key = getUserBookmarksKey(fid);
+    console.log("[KV] Getting bookmarks for key:", key);
+    const redis = getRedisClient();
+    const result = await redis.smembers(key);
+    const bookmarks = result.map(id => Number(id));
+    console.log("[KV] Retrieved bookmarks:", bookmarks);
+    return bookmarks;
+  } catch (error) {
+    console.error("[KV] Error getting bookmarks:", error);
+    if (error instanceof Error) {
+      console.error("[KV] Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
+    return [];
+  }
+}
+
+/**
+ * Add a pattern to user's bookmarks
+ */
+export async function addUserBookmark(fid: number, patternId: number): Promise<boolean> {
+  try {
+    const key = getUserBookmarksKey(fid);
+    console.log(`[KV] Adding bookmark ${patternId} for key:`, key);
+    const redis = getRedisClient();
+    const result = await redis.sadd(key, patternId);
+    console.log("[KV] Successfully added bookmark:", result);
+    return result === 1; // Returns true if the pattern was newly added
+  } catch (error) {
+    console.error("[KV] Error adding bookmark:", error);
+    if (error instanceof Error) {
+      console.error("[KV] Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
+    return false;
+  }
+}
+
+/**
+ * Remove a pattern from user's bookmarks
+ */
+export async function removeUserBookmark(fid: number, patternId: number): Promise<boolean> {
+  try {
+    const key = getUserBookmarksKey(fid);
+    console.log(`[KV] Removing bookmark ${patternId} for key:`, key);
+    const redis = getRedisClient();
+    const result = await redis.srem(key, patternId);
+    console.log("[KV] Successfully removed bookmark:", result);
+    return result === 1; // Returns true if the pattern was removed
+  } catch (error) {
+    console.error("[KV] Error removing bookmark:", error);
+    if (error instanceof Error) {
+      console.error("[KV] Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
+    return false;
+  }
+}
+
+/**
+ * Check if a pattern is bookmarked by a user
+ */
+export async function isPatternBookmarked(fid: number, patternId: number): Promise<boolean> {
+  try {
+    const key = getUserBookmarksKey(fid);
+    console.log(`[KV] Checking if pattern ${patternId} is bookmarked for key:`, key);
+    const redis = getRedisClient();
+    const result = await redis.sismember(key, patternId);
+    console.log("[KV] Pattern bookmark status:", result);
+    return result === 1;
+  } catch (error) {
+    console.error("[KV] Error checking bookmark status:", error);
+    if (error instanceof Error) {
+      console.error("[KV] Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
+    return false;
+  }
+}
