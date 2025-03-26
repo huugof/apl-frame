@@ -879,19 +879,21 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
             onClick={() => {
               setIsBookmarksModalOpen(true);
             }}
-            className={`px-5 py-3 bg-[#f5f5f5] text-black rounded-3xl flex items-center gap-2 hover:bg-gray-50 transition-colors ${
+            className={`w-12 h-12 bg-[#f5f5f5] text-black rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors ${
               isBookmarked ? "text-blue-600" : ""
             }`}
             aria-label="View bookmarks"
           >
-            <img 
-              src="/bookmark-icon.svg" 
-              alt="Bookmarks" 
-              className={`w-5 h-5 ${isBookmarked ? "[filter:invert(41%)_sepia(98%)_saturate(4272%)_hue-rotate(199deg)_brightness(97%)_contrast(96%)]" : ""}`}
-            />
-            <span className={`text-md font-medium ${isBookmarked ? "text-blue-600" : "text-gray-600"}`}>
-              {bookmarkedPatterns.length}
-            </span>
+            <div className="flex items-center gap-2">
+              <img 
+                src="/bookmark-icon.svg" 
+                alt="Bookmarks" 
+                className={`w-5 h-5 ${isBookmarked ? "[filter:invert(41%)_sepia(98%)_saturate(4272%)_hue-rotate(199deg)_brightness(97%)_contrast(96%)]" : ""}`}
+              />
+              <span className={`text-md font-medium ${isBookmarked ? "text-blue-600" : "text-gray-600"}`}>
+                {bookmarkedPatterns.length}
+              </span>
+            </div>
           </button>
           <button
             onClick={() => setIsRelatedModalOpen(!isRelatedModalOpen)}
