@@ -781,8 +781,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
                         }}
                         className="w-full px-6 py-3 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors flex items-center justify-center gap-2"
                       >
-                        <span>{isBookmarked ? "Remove from Bookmarks" : "Add to Bookmarks"}</span>
-                        <span>{isBookmarked ? "🔖" : "📑"}</span>
+                        <span>{isBookmarked ? "Remove Bookmark" : "Add Bookmark"}</span>
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -846,7 +845,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
                 <p className="text-gray-700">
                 <i>A Pattern Language</i> by Christopher Alexander is a book on architecture and urban design that presents 253 design principles—"patterns"—for creating livable, human-centered spaces. It's a guide for shaping everything from rooms to cities.                </p>
                 <div className="space-y-2">
-                  <p className="text-gray-600">Learn more about the book: {""}
+                  <p className="text-gray-600 text-sm">Learn more about the book: {""}
                   <button
                     onClick={() => sdk.actions.openUrl("https://www.patternlanguage.com/")}
                     className="text-blue-600 hover:underline"
@@ -880,13 +879,19 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
             onClick={() => {
               setIsBookmarksModalOpen(true);
             }}
-            className={`px-5 py-3 ${
-              isBookmarked ? "bg-blue-100" : "bg-[#f5f5f5]"
-            } text-black rounded-3xl flex items-center gap-2 hover:bg-gray-50 transition-colors`}
+            className={`px-5 py-3 bg-[#f5f5f5] text-black rounded-3xl flex items-center gap-2 hover:bg-gray-50 transition-colors ${
+              isBookmarked ? "text-blue-600" : ""
+            }`}
             aria-label="View bookmarks"
           >
-            <img src="/bookmark-icon.svg" alt="Bookmarks" className="w-5 h-5" />
-            <span className="text-md font-medium text-gray-600">{bookmarkedPatterns.length}</span>
+            <img 
+              src="/bookmark-icon.svg" 
+              alt="Bookmarks" 
+              className={`w-5 h-5 ${isBookmarked ? "brightness-0 invert" : ""}`}
+            />
+            <span className={`text-md font-medium ${isBookmarked ? "text-blue-600" : "text-gray-600"}`}>
+              {bookmarkedPatterns.length}
+            </span>
           </button>
           <button
             onClick={() => setIsRelatedModalOpen(!isRelatedModalOpen)}
