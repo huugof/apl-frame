@@ -893,6 +893,19 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
               {bookmarkedPatterns.length}
             </span>
           </button>
+          <button
+            onClick={() => setIsRelatedModalOpen(!isRelatedModalOpen)}
+            className="w-12 h-12 bg-[#f5f5f5] text-white rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
+          >
+            <img src="/related-icon.svg" alt="Related patterns" className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setIsModalOpen(!isModalOpen)}
+            className="w-12 h-12 bg-[#f5f5f5] text-white rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
+            aria-label="Open menu"
+          >
+            <img src="/menu-icon.svg" alt="Menu" className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </div>

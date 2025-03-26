@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         name: "APL Daily",
         url: `${appUrl}/frames/pattern/${pattern.id}`,
         splashImageUrl: `${appUrl}/splash.png`,
-        splashBackgroundColor: "#e2e2e2",
+        splashBackgroundColor: "#fff",
       },
     },
   };

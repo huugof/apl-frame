@@ -28,7 +28,7 @@ const frameEmbed = {
       name: "APL Daily",
       url: `${appUrl}`,
       splashImageUrl: `${appUrl}/splash.png`,
-      splashBackgroundColor: "#e2e2e2",
+      splashBackgroundColor: "#fff",
     },
   },
 };
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   other: {
     "fc:frame": JSON.stringify(frameEmbed),
     "viewport": "width=device-width, initial-scale=1, viewport-fit=cover",
-    "theme-color": "#ffffff"
+    "theme-color": "#fff"
   },
 };
 
