@@ -887,24 +887,11 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
             <img 
               src="/bookmark-icon.svg" 
               alt="Bookmarks" 
-              className={`w-5 h-5 ${isBookmarked ? "brightness-0 invert" : ""}`}
+              className={`w-5 h-5 ${isBookmarked ? "[filter:invert(41%)_sepia(98%)_saturate(4272%)_hue-rotate(199deg)_brightness(97%)_contrast(96%)]" : ""}`}
             />
             <span className={`text-md font-medium ${isBookmarked ? "text-blue-600" : "text-gray-600"}`}>
               {bookmarkedPatterns.length}
             </span>
-          </button>
-          <button
-            onClick={() => setIsRelatedModalOpen(!isRelatedModalOpen)}
-            className="p-3 bg-[#f5f5f5] text-white rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
-          >
-            <img src="/related-icon.svg" alt="Related patterns" className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => setIsModalOpen(!isModalOpen)}
-            className="px-5 py-3 bg-[#f5f5f5] text-white rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
-            aria-label="Open menu"
-          >
-            <img src="/menu-icon.svg" alt="Menu" className="w-5 h-5" />
           </button>
         </div>
       </div>
