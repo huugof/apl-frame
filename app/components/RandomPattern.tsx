@@ -705,7 +705,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
       >
         {/* Red arrow pointing up */}
         <div 
-          className="fixed top-4 right-[5%] transform -translate-y-0"
+          className="fixed top-4 right-[0%] transform -translate-y-0"
           style={{
             animation: "bounce 1s infinite"
           }}
@@ -842,30 +842,30 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
             <div className={`flex flex-col h-full transition-opacity duration-350 ${
               isAboutModalOpen ? "opacity-100" : "opacity-0"
             }`}>
-              <div className="text-center mb-2">
-                <h2 className="text-2xl font-bold text-gray-800">About</h2>
-              </div>
-              <div className="w-full flex-1 overflow-y-auto text-center space-y-4 px-1">
+              <div className="w-full flex-1 overflow-y-auto text-left space-y-4 px-1">
                 <p className="text-gray-700">
-                  A Pattern Language is a seminal work by Christopher Alexander that presents a practical architectural theory based on the observation that most beautiful places in the world were not designed by architects but emerged from the collective wisdom of generations of builders and inhabitants.
-                </p>
+                <i>A Pattern Language</i> by Christopher Alexander is a book on architecture and urban design that presents 253 design principles—"patterns"—for creating livable, human-centered spaces. It's a guide for shaping everything from rooms to cities.                </p>
                 <div className="space-y-2">
-                  <p className="text-gray-600 text-sm">Learn more about the book:</p>
+                  <p className="text-gray-600">Learn more about the book: {""}
                   <button
                     onClick={() => sdk.actions.openUrl("https://www.patternlanguage.com/")}
-                    className="text-blue-600 hover:underline text-sm"
+                    className="text-blue-600 hover:underline"
                   >
                     patternlanguage.com
                   </button>
+                  </p>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-gray-600 text-sm">MD version by:</p>
-                  <button
-                    onClick={() => sdk.actions.openUrl("https://github.com/zenodotus280/apl-md/tree/master")}
-                    className="text-blue-600 hover:underline text-sm"
-                  >
-                    zenodotus280/apl-md
-                  </button>
+                  <p className="text-gray-600 text-sm italic">
+                    This frame is repackaged from the{" "}
+                    <button
+                      onClick={() => sdk.actions.openUrl("https://github.com/zenodotus280/apl-md/tree/master")}
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      markdown version
+                    </button>
+                    {" "}by @zenodotus280
+                  </p>
                 </div>
               </div>
             </div>
@@ -873,7 +873,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         </div>
       </div>
 
-      {/* Bottom Toolbar - Update bookmark button click handler */}
+      {/* Bottom Toolbar */}
       <div className="fixed bottom-7 left-0 right-0 flex justify-center">
         <div ref={buttonWrapperRef} className="w-[90%] flex items-center justify-between bg-[#f5f5f5] px-6 py-3 rounded-full shadow-xl">
           <button
@@ -882,24 +882,24 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
             }}
             className={`px-5 py-3 ${
               isBookmarked ? "bg-blue-100" : "bg-[#f5f5f5]"
-            } text-black shadow-lg rounded-full flex items-center gap-2 hover:bg-gray-50 transition-colors`}
+            } text-black rounded-3xl flex items-center gap-2 hover:bg-gray-50 transition-colors`}
             aria-label="View bookmarks"
           >
-            <span className="text-sm font-medium">✨</span>
-            <span className="text-sm font-medium text-gray-600">{bookmarkedPatterns.length}</span>
+            <img src="/bookmark-icon.svg" alt="Bookmarks" className="w-5 h-5" />
+            <span className="text-md font-medium text-gray-600">{bookmarkedPatterns.length}</span>
           </button>
           <button
             onClick={() => setIsRelatedModalOpen(!isRelatedModalOpen)}
-            className="px-5 py-3 bg-[#f5f5f5] text-white rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
+            className="p-3 bg-[#f5f5f5] text-white rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
           >
-            <img src="/related.svg" alt="Related patterns" className="w-5 h-5" />
+            <img src="/related-icon.svg" alt="Related patterns" className="w-5 h-5" />
           </button>
           <button
             onClick={() => setIsModalOpen(!isModalOpen)}
             className="px-5 py-3 bg-[#f5f5f5] text-white rounded-full flex items-center gap-1 hover:bg-gray-50 transition-colors"
             aria-label="Open menu"
           >
-            <img src="/hamburger.svg" alt="Menu" className="w-5 h-5" />
+            <img src="/menu-icon.svg" alt="Menu" className="w-5 h-5" />
           </button>
         </div>
       </div>
