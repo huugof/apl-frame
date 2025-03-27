@@ -61,7 +61,7 @@ export default function PatternCard({
         </div>
 
         {/* Solution */}
-        <div className="mb-8">
+        <div className="mb-16">
           <h3 className="text-xl font-medium text-gray-900 mb-4">Solution</h3>
           <p className="text-gray-700 whitespace-pre-line">{pattern.solution}</p>
         </div>

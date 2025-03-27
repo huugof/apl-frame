@@ -472,39 +472,42 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         
         // Initialize Frame SDK
         if (sdk && !isSDKLoaded) {
-          setIsSDKLoaded(true);
+          // Delay setting isSDKLoaded to true to show splash screen
+          setTimeout(async () => {
+            setIsSDKLoaded(true);
 
-          // Check if frame is already added
-          const context = await sdk.context;
-          if (context?.client?.added) {
-            console.log("[Frame] Frame is already added");
-            setHasAddedFrame(true);
-          }
-
-          // Set up event listeners
-          sdk.on("frameAdded", async (event: FrameEvent) => {
-            console.log("[Frame] Frame added event received");
-            setHasAddedFrame(true);
-            if (event.notificationDetails && event.fid) {
-              console.log(`[Frame] Notification details received for user ${event.fid}, saving...`);
-              await saveNotificationDetails(event.notificationDetails, event.fid);
-            } else {
-              console.log("[Frame] No notification details or FID received");
+            // Check if frame is already added
+            const context = await sdk.context;
+            if (context?.client?.added) {
+              console.log("[Frame] Frame is already added");
+              setHasAddedFrame(true);
             }
-          });
 
-          sdk.on("frameRemoved", () => {
-            console.log("[Frame] Frame removed event received");
-            setHasAddedFrame(false);
-          });
+            // Set up event listeners
+            sdk.on("frameAdded", async (event: FrameEvent) => {
+              console.log("[Frame] Frame added event received");
+              setHasAddedFrame(true);
+              if (event.notificationDetails && event.fid) {
+                console.log(`[Frame] Notification details received for user ${event.fid}, saving...`);
+                await saveNotificationDetails(event.notificationDetails, event.fid);
+              } else {
+                console.log("[Frame] No notification details or FID received");
+              }
+            });
 
-          // Tell the client we're ready and can hide the splash screen
-          sdk.actions.ready();
+            sdk.on("frameRemoved", () => {
+              console.log("[Frame] Frame removed event received");
+              setHasAddedFrame(false);
+            });
 
-          // Only prompt to add frame if we're not in an embedded view and frame isn't already added
-          if (!initialPatternId && !context?.client?.added) {
-            promptAddFrame();
-          }
+            // Tell the client we're ready and can hide the splash screen
+            sdk.actions.ready();
+
+            // Only prompt to add frame if we're not in an embedded view and frame isn't already added
+            if (!initialPatternId && !context?.client?.added) {
+              promptAddFrame();
+            }
+          }, 2000); // 2 second delay
         }
       } catch (error) {
         console.error("[Frame] Failed to initialize frame:", error);
@@ -563,6 +566,21 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
 
   return (
     <div className="relative min-h-screen bg-white">
+      {/* Splash screen overlay */}
+      <div 
+        className={`fixed inset-0 z-50 bg-white transition-opacity duration-500 ${
+          isSDKLoaded ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
+      >
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img 
+            src="/splash.gif" 
+            alt="Loading..." 
+            className="w-full h-full object-contain"
+          />
+        </div>
+      </div>
+
       {/* Inject keyframe animation */}
       <style dangerouslySetInnerHTML={{ __html: bounceKeyframes }} />
 
@@ -610,7 +628,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
             }`}>
               {pattern && (
                 <>
-                  <div className="text-center mb-2">
+                  <div className="text-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-800">Pattern {pattern.number}</h2>
                     <h3 className="text-md text-gray-600 mt-1">{pattern.title}</h3>
                   </div>
@@ -619,7 +637,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
               <div className="w-full flex-1 space-y-2 overflow-y-auto">
                 <button
                   onClick={handleShareClick}
-                  className="px-10 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors w-full"
+                  className="px-10 py-3 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors w-full"
                 >
                   Share!
                 </button>
@@ -779,7 +797,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
                           await toggleBookmark();
                           setIsBookmarksModalOpen(false);
                         }}
-                        className="w-full px-6 py-3 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors flex items-center justify-center gap-2"
+                        className="w-full px-6 py-3 bg-[#e2e2e2] text-black rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                       >
                         <span>{isBookmarked ? "Remove Bookmark" : "Add Bookmark"}</span>
                       </button>
@@ -874,12 +892,12 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
 
       {/* Bottom Toolbar */}
       <div className="fixed bottom-7 left-0 right-0 flex justify-center">
-        <div ref={buttonWrapperRef} className="w-[90%] flex items-center justify-between bg-[#f5f5f5] px-6 py-3 rounded-full shadow-xl">
+        <div ref={buttonWrapperRef} className="w-[90%] flex items-center justify-center gap-16 bg-[#f5f5f5] px-6 py-3 rounded-full shadow-xl">
           <button
             onClick={() => {
               setIsBookmarksModalOpen(true);
             }}
-            className={`w-12 h-12 bg-[#f5f5f5] text-black rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors ${
+            className={`w-12 h-12 bg-[#f5f5f5] text-gray-600 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors ${
               isBookmarked ? "text-blue-600" : ""
             }`}
             aria-label="View bookmarks"
@@ -888,18 +906,18 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
               <img 
                 src="/bookmark-icon.svg" 
                 alt="Bookmarks" 
-                className={`w-5 h-5 ${isBookmarked ? "[filter:invert(41%)_sepia(98%)_saturate(4272%)_hue-rotate(199deg)_brightness(97%)_contrast(96%)]" : ""}`}
+                className={`w-6 h-6 ${isBookmarked ? "[filter:invert(41%)_sepia(98%)_saturate(4272%)_hue-rotate(199deg)_brightness(97%)_contrast(96%)]" : "[filter:brightness(0)_opacity(60%)]"}`}
               />
-              <span className={`text-md font-medium ${isBookmarked ? "text-blue-600" : "text-gray-600"}`}>
+              <span className={`text-lg font-medium ${isBookmarked ? "text-blue-600" : "text-gray-600"}`}>
                 {bookmarkedPatterns.length}
               </span>
             </div>
           </button>
           <button
             onClick={() => setIsRelatedModalOpen(!isRelatedModalOpen)}
-            className="w-12 h-12 bg-[#f5f5f5] text-white rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
+            className="w-12 h-12 bg-[#f5f5f5] text-gray-600 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
           >
-            <img src="/related-icon.svg" alt="Related patterns" className="w-5 h-5" />
+            <img src="/related-icon.svg" alt="Related patterns" className="w-6 h-6 [filter:brightness(0)_opacity(60%)]" />
           </button>
           <button
             onClick={() => setIsModalOpen(!isModalOpen)}

@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const frame = {
     version: "next",
-    imageUrl: `${appUrl}/start.png`,
+    imageUrl: `${appUrl}/icon.png`,
     button: {
       title: `Check out Pattern #${pattern.number}, ${pattern.title}`,
       action: {
