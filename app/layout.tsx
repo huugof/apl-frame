@@ -27,7 +27,7 @@ const frameEmbed = {
       type: "launch_frame",
       name: "APL Daily",
       url: `${appUrl}`,
-      splashImageUrl: `${appUrl}/splash.png`,
+      splashImageUrl: `${appUrl}/splash2.png`,
       splashBackgroundColor: "#fff",
     },
   },

@@ -12,11 +12,11 @@ export async function GET() {
     frame: {
       version: "0.0.1",
       name: "APL Daily",
-      iconUrl: `${appUrl}/icon.png`,
+      iconUrl: `${appUrl}/icon2.png`,
       homeUrl: appUrl,
       imageUrl: `${appUrl}/image.png`,
       buttonTitle: "Launch Today's Pattern",
-      splashImageUrl: `${appUrl}/splash.png`,
+      splashImageUrl: `${appUrl}/splash2.png`,
       splashBackgroundColor: "#fff",
       webhookUrl: `${appUrl}/api/webhook`,
     },
