@@ -14,7 +14,7 @@ export async function GET() {
       name: "APL Daily",
       iconUrl: `${appUrl}/icon.png`,
       homeUrl: appUrl,
-      imageUrl: `${appUrl}/image.png`,
+      imageUrl: `${appUrl}/start.png`,
       buttonTitle: "Launch Today's Pattern",
       splashImageUrl: `${appUrl}/splash.png`,
       splashBackgroundColor: "#fff",
