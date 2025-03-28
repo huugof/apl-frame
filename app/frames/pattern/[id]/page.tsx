@@ -28,11 +28,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     version: "next",
     imageUrl: `${appUrl}/start.png`,
     button: {
-      title: `#${pattern.number}, ${pattern.title}`,
+      title: `Pattern ${pattern.number}: ${pattern.title}`,
       action: {
         type: "launch_frame",
         name: "APL Daily",
-        url: `${appUrl}`,
+        url: `${appUrl}/frames/pattern/${pattern.id}`,
         splashImageUrl: `${appUrl}/splash-bw.png`,
         splashBackgroundColor: "#fff",
       },
@@ -41,10 +41,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `Pattern ${pattern.number}: ${pattern.title}`,
-    description: pattern.problem,
     openGraph: {
       title: `Pattern ${pattern.number}: ${pattern.title}`,
-      description: pattern.problem,
+      description: "A pattern",
     },
     other: {
       "fc:frame": JSON.stringify(frame),
