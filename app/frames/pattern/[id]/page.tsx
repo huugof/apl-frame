@@ -28,11 +28,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     version: "next",
     imageUrl: `${appUrl}/start.png`,
     button: {
-      title: `Check out Pattern #${pattern.number}, ${pattern.title}`,
+      title: `#${pattern.number}, ${pattern.title}`,
       action: {
         type: "launch_frame",
         name: "APL Daily",
-        url: `${appUrl}/frames/pattern/${pattern.id}`,
+        url: `${appUrl}`,
         splashImageUrl: `${appUrl}/splash-bw.png`,
         splashBackgroundColor: "#fff",
       },
