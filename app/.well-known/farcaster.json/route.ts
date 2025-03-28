@@ -16,7 +16,7 @@ export async function GET() {
       homeUrl: appUrl,
       imageUrl: `${appUrl}/start.png`,
       buttonTitle: "Launch Today's Pattern",
-      splashImageUrl: `${appUrl}/splash.png`,
+      splashImageUrl: `${appUrl}/splash-bw.png`,
       splashBackgroundColor: "#fff",
       webhookUrl: `${appUrl}/api/webhook`,
     },
