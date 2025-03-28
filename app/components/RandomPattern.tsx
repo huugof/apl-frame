@@ -72,7 +72,6 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
   const [pattern, setPattern] = useState<Pattern | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [hasAddedFrame, setHasAddedFrame] = useState(false);
   const [newPatternAvailable, setNewPatternAvailable] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -471,43 +470,38 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         await loadPattern(patternId ? parseInt(patternId, 10) : undefined);
         
         // Initialize Frame SDK
-        if (sdk && !isSDKLoaded) {
-          // Delay setting isSDKLoaded to true to show splash screen
-          setTimeout(async () => {
-            setIsSDKLoaded(true);
+        if (sdk) {
+          // Check if frame is already added
+          const context = await sdk.context;
+          if (context?.client?.added) {
+            console.log("[Frame] Frame is already added");
+            setHasAddedFrame(true);
+          }
 
-            // Check if frame is already added
-            const context = await sdk.context;
-            if (context?.client?.added) {
-              console.log("[Frame] Frame is already added");
-              setHasAddedFrame(true);
+          // Set up event listeners
+          sdk.on("frameAdded", async (event: FrameEvent) => {
+            console.log("[Frame] Frame added event received");
+            setHasAddedFrame(true);
+            if (event.notificationDetails && event.fid) {
+              console.log(`[Frame] Notification details received for user ${event.fid}, saving...`);
+              await saveNotificationDetails(event.notificationDetails, event.fid);
+            } else {
+              console.log("[Frame] No notification details or FID received");
             }
+          });
 
-            // Set up event listeners
-            sdk.on("frameAdded", async (event: FrameEvent) => {
-              console.log("[Frame] Frame added event received");
-              setHasAddedFrame(true);
-              if (event.notificationDetails && event.fid) {
-                console.log(`[Frame] Notification details received for user ${event.fid}, saving...`);
-                await saveNotificationDetails(event.notificationDetails, event.fid);
-              } else {
-                console.log("[Frame] No notification details or FID received");
-              }
-            });
+          sdk.on("frameRemoved", () => {
+            console.log("[Frame] Frame removed event received");
+            setHasAddedFrame(false);
+          });
 
-            sdk.on("frameRemoved", () => {
-              console.log("[Frame] Frame removed event received");
-              setHasAddedFrame(false);
-            });
+          // Tell the client we're ready
+          sdk.actions.ready();
 
-            // Tell the client we're ready and can hide the splash screen
-            sdk.actions.ready();
-
-            // Only prompt to add frame if we're not in an embedded view and frame isn't already added
-            if (!initialPatternId && !context?.client?.added) {
-              promptAddFrame();
-            }
-          }, 2000); // 2 second delay
+          // Only prompt to add frame if we're not in an embedded view and frame isn't already added
+          if (!initialPatternId && !context?.client?.added) {
+            promptAddFrame();
+          }
         }
       } catch (error) {
         console.error("[Frame] Failed to initialize frame:", error);
@@ -522,7 +516,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         sdk.removeAllListeners();
       }
     };
-  }, [isSDKLoaded, searchParams, initialPatternId]);
+  }, [searchParams, initialPatternId]);
 
   // Check for new patterns every minute
   useEffect(() => {
@@ -566,21 +560,6 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
 
   return (
     <div className="relative min-h-screen bg-white">
-      {/* Splash screen overlay */}
-      <div 
-        className={`fixed inset-0 z-50 bg-white transition-opacity duration-500 ${
-          isSDKLoaded ? "opacity-0 pointer-events-none" : "opacity-100"
-        }`}
-      >
-        <div className="absolute inset-0 flex items-center justify-center">
-          <img 
-            src="/splash.png" 
-            alt="Loading..." 
-            className="w-full h-full object-contain"
-          />
-        </div>
-      </div>
-
       {/* Inject keyframe animation */}
       <style dangerouslySetInnerHTML={{ __html: bounceKeyframes }} />
 
