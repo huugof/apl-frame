@@ -26,14 +26,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const frame = {
     version: "next",
-    imageUrl: `${appUrl}/icon2.png`,
+    imageUrl: `${appUrl}/start.png`,
     button: {
       title: `Check out Pattern #${pattern.number}, ${pattern.title}`,
       action: {
         type: "launch_frame",
         name: "APL Daily",
         url: `${appUrl}/frames/pattern/${pattern.id}`,
-        splashImageUrl: `${appUrl}/splash2.png`,
+        splashImageUrl: `${appUrl}/splash.png`,
         splashBackgroundColor: "#fff",
       },
     },
