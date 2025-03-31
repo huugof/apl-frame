@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     version: "next",
     imageUrl: `${appUrl}/start.png`,
     button: {
-      title: `Pattern ${pattern.number}: ${pattern.title}`,
+      title: `Launch Pattern #${pattern.number}}`,
       action: {
         type: "launch_frame",
         name: "APL Daily",
