@@ -40,9 +40,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 
   return {
-    title: `Pattern ${pattern.number}: ${pattern.title}`,
+    title: `Launch Pattern #${pattern.number}}`,
     openGraph: {
-      title: `Pattern ${pattern.number}: ${pattern.title}`,
+      title: `Launch Pattern #${pattern.number}}`,
       description: "A pattern",
     },
     other: {
