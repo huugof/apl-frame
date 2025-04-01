@@ -28,23 +28,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     version: "next",
     imageUrl: `${appUrl}/start.png`,
     button: {
-      title: `Check out Pattern #${pattern.number}, ${pattern.title}`,
+      title: `Launch Pattern #${pattern.number}`,
       action: {
         type: "launch_frame",
         name: "APL Daily",
         url: `${appUrl}/frames/pattern/${pattern.id}`,
-        splashImageUrl: `${appUrl}/splash.png`,
-        splashBackgroundColor: "#e2e2e2",
+        splashImageUrl: `${appUrl}/splash-bw.png`,
+        splashBackgroundColor: "#fff",
       },
     },
   };
 
   return {
-    title: `Pattern ${pattern.number}: ${pattern.title}`,
-    description: pattern.problem,
+    title: `Launch Pattern #${pattern.number}`,
     openGraph: {
-      title: `Pattern ${pattern.number}: ${pattern.title}`,
-      description: pattern.problem,
+      title: `Launch Pattern #${pattern.number}`,
+      description: "A pattern",
     },
     other: {
       "fc:frame": JSON.stringify(frame),

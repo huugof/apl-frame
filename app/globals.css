@@ -4,12 +4,12 @@
 
 :root {
   --foreground: #000;
-  --background: #e2e2e2;
+  --background: #fff;
 }
 
 html {
   height: 100%;
-  background-color: #e2e2e2;
+  background-color: #fff;
 }
 
 body {
@@ -22,8 +22,13 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Ensure red background extends to the bottom on mobile */
+/* Ensure white background extends to the bottom on mobile */
 #__next {
   min-height: 100%;
-  background-color: #e2e2e2;
+  background-color: #fff;
+}
+
+/* Ensure white background during splash screen */
+#__next > div {
+  background-color: #fff;
 }
