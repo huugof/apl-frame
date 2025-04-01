@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     version: "next",
     imageUrl: `${appUrl}/start.png`,
     button: {
-      title: `Launch Pattern #${pattern.number}}`,
+      title: `Launch Pattern #${pattern.number}`,
       action: {
         type: "launch_frame",
         name: "APL Daily",
@@ -40,9 +40,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 
   return {
-    title: `Launch Pattern #${pattern.number}}`,
+    title: `Launch Pattern #${pattern.number}`,
     openGraph: {
-      title: `Launch Pattern #${pattern.number}}`,
+      title: `Launch Pattern #${pattern.number}`,
       description: "A pattern",
     },
     other: {
