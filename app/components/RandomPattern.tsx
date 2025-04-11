@@ -78,6 +78,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
   const [isRelatedModalOpen, setIsRelatedModalOpen] = useState(false);
   const [isBookmarksModalOpen, setIsBookmarksModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const [isAddFramePromptOpen, setIsAddFramePromptOpen] = useState(false);
   const [relatedPatterns, setRelatedPatterns] = useState<Array<{ id: number; title: string }>>([]);
   const [bookmarkedPatterns, setBookmarkedPatterns] = useState<Array<{ id: number; title: string }>>([]);
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -85,6 +86,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
   const relatedModalRef = useRef<HTMLDivElement>(null);
   const bookmarksModalRef = useRef<HTMLDivElement>(null);
   const aboutModalRef = useRef<HTMLDivElement>(null);
+  const addFramePromptRef = useRef<HTMLDivElement>(null);
   const buttonWrapperRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const appUrl = process.env.NEXT_PUBLIC_URL;
@@ -106,16 +108,19 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
       if (aboutModalRef.current && !aboutModalRef.current.contains(event.target as Node)) {
         setIsAboutModalOpen(false);
       }
+      if (addFramePromptRef.current && !addFramePromptRef.current.contains(event.target as Node)) {
+        setIsAddFramePromptOpen(false);
+      }
     };
 
-    if (isModalOpen || isRelatedModalOpen || isBookmarksModalOpen || isAboutModalOpen) {
+    if (isModalOpen || isRelatedModalOpen || isBookmarksModalOpen || isAboutModalOpen || isAddFramePromptOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isModalOpen, isRelatedModalOpen, isBookmarksModalOpen, isAboutModalOpen]);
+  }, [isModalOpen, isRelatedModalOpen, isBookmarksModalOpen, isAboutModalOpen, isAddFramePromptOpen]);
 
   /**
    * Load a pattern by ID
@@ -222,26 +227,6 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
       console.error("Failed to navigate to pattern:", error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  /**
-   * Prompt user to add the frame and enable notifications
-   */
-  const promptAddFrame = async () => {
-    try {
-      const result = await sdk.actions.addFrame() as AddFrameResult;
-      if (result.added) {
-        setHasAddedFrame(true);
-        // Save notification details if provided
-        if (result.notificationDetails && result.fid) {
-          await saveNotificationDetails(result.notificationDetails, result.fid);
-        }
-      } else if (result.reason) {
-        console.log("Frame not added:", result.reason);
-      }
-    } catch (error) {
-      console.error("Error adding frame:", error);
     }
   };
 
@@ -497,11 +482,6 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
 
           // Tell the client we're ready
           sdk.actions.ready();
-
-          // Only prompt to add frame if we're not in an embedded view and frame isn't already added
-          if (!initialPatternId && !context?.client?.added) {
-            promptAddFrame();
-          }
         }
       } catch (error) {
         console.error("[Frame] Failed to initialize frame:", error);
@@ -574,7 +554,7 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         </button>
       )}
       
-      <div className={`pb-8 transition-all duration-300 ${isModalOpen || isRelatedModalOpen || isAboutModalOpen || (!hasAddedFrame && isBookmarksModalOpen) ? "blur-sm" : ""}`}>
+      <div className={`pb-8 transition-all duration-300 ${isModalOpen || isRelatedModalOpen || isAboutModalOpen || isAddFramePromptOpen ? "blur-sm" : ""}`}>
         <div className="flex flex-col items-center">
           <PatternCard
             pattern={pattern}
@@ -694,55 +674,24 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
         </div>
       </div>
 
-      {/* Add Frame Modal */}
+      {/* Add Frame Prompt Modal */}
       <div 
-        className={`fixed bottom-7 left-0 right-0 flex justify-center z-20 w-full transition-opacity duration-350 ${
-          !hasAddedFrame && isBookmarksModalOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        ref={addFramePromptRef}
+        className={`fixed top-0 left-0 right-0 flex justify-center z-20 w-full transition-opacity ${
+          isAddFramePromptOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
-        {/* Red arrow pointing up */}
-        <div 
-          className="fixed top-4 right-[0%] transform -translate-y-0"
-          style={{
-            animation: "bounce 1s infinite"
-          }}
-        >
-          <svg 
-            width="48" 
-            height="48" 
-            viewBox="0 0 24 24" 
-            version="1.1" 
-            xmlns="http://www.w3.org/2000/svg" 
-            style={{
-              fillRule: "evenodd",
-              clipRule: "evenodd",
-              strokeLinejoin: "round",
-              strokeMiterlimit: 2,
-              fill: "#ef4444"
-            }}
-          >
-            <g transform="matrix(6.12323e-17,-1,1,6.12323e-17,-0.016,24.016)">
-              <path d="M12.068,0.016L8.351,3.714L13.614,9L-0,9L-0,15L13.614,15L8.319,20.317L12.037,24.016L24,12L12.068,0.016Z" style={{fillRule: "nonzero"}}/>
-            </g>
-          </svg>
-        </div>
-        
-        <div className="w-[90%] mx-auto relative">
-          <div 
-            className="bg-white rounded-[24px] shadow-2xl w-full p-6 transform transition-transform duration-350 ease-out origin-bottom" 
-            style={{ 
-              height: "fit-content",
-              transform: !hasAddedFrame && isBookmarksModalOpen ? "scaleY(1)" : "scaleY(0)"
-            }}
-          >
-            <div className="flex flex-col items-center gap-6 py-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Your Bookmarks</h2>
-              <div className="text-xl text-gray-800 text-center flex flex-col items-center gap-3">
-                <span>Please add the frame to save bookmarks.</span>
-              </div>
-            </div>
+        <div className="w-[75%] mx-auto h-screen flex items-center justify-center -mt-20">
+          <div className="text-center">
+            <span className="text-3xl font-bold text-red [animation:subtlePulse_3s_ease-in-out_infinite]">Add <strong>A Pattern Language Daily</strong> to unlock bookmarks!</span>
           </div>
         </div>
+        <style jsx>{`
+          @keyframes subtlePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.9; }
+          }
+        `}</style>
       </div>
 
       {/* Bookmarks Modal - Update to only show when frame is added */}
@@ -805,12 +754,43 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
                     <p className="text-center text-gray-600">Add frame to bookmark patterns</p>
                     <button
                       onClick={async () => {
-                        await promptAddFrame();
-                        setIsBookmarksModalOpen(false);
+                        if (!hasAddedFrame) {
+                          console.log("Opening add frame prompt");
+                          setIsAddFramePromptOpen(true);
+                          try {
+                            const result = await sdk.actions.addFrame() as AddFrameResult;
+                            if (result.added) {
+                              setHasAddedFrame(true);
+                              setIsAddFramePromptOpen(false);
+                              setIsBookmarksModalOpen(true);
+                            }
+                          } catch (error: any) {
+                            console.log("Full error object:", error);
+                            console.log("Error message:", error.message);
+                            console.log("Error type:", error.constructor.name);
+                            // Close the prompt for any error since we know the user rejected it
+                            console.log("Closing add frame prompt due to error");
+                            setIsAddFramePromptOpen(false);
+                          }
+                        } else {
+                          setIsBookmarksModalOpen(true);
+                        }
                       }}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                      className={`w-12 h-12 bg-[#f5f5f5] text-gray-600 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors ${
+                        isBookmarked ? "text-blue-600" : ""
+                      }`}
+                      aria-label="View bookmarks"
                     >
-                      Add Frame
+                      <div className="flex items-center gap-2">
+                        <img 
+                          src="/bookmark-icon.svg" 
+                          alt="Bookmarks" 
+                          className={`w-6 h-6 ${isBookmarked ? "[filter:invert(41%)_sepia(98%)_saturate(4272%)_hue-rotate(199deg)_brightness(97%)_contrast(96%)]" : "[filter:brightness(0)_opacity(60%)]"}`}
+                        />
+                        <span className={`text-lg font-medium ${isBookmarked ? "text-blue-600" : "text-gray-600"}`}>
+                          {bookmarkedPatterns.length}
+                        </span>
+                      </div>
                     </button>
                   </div>
                 )}
@@ -873,8 +853,28 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
       <div className="fixed bottom-7 left-0 right-0 flex justify-center">
         <div ref={buttonWrapperRef} className="w-[90%] flex items-center justify-center gap-16 bg-[#f5f5f5] px-6 py-3 rounded-full shadow-xl">
           <button
-            onClick={() => {
-              setIsBookmarksModalOpen(true);
+            onClick={async () => {
+              if (!hasAddedFrame) {
+                console.log("Opening add frame prompt");
+                setIsAddFramePromptOpen(true);
+                try {
+                  const result = await sdk.actions.addFrame() as AddFrameResult;
+                  if (result.added) {
+                    setHasAddedFrame(true);
+                    setIsAddFramePromptOpen(false);
+                    setIsBookmarksModalOpen(true);
+                  }
+                } catch (error: any) {
+                  console.log("Full error object:", error);
+                  console.log("Error message:", error.message);
+                  console.log("Error type:", error.constructor.name);
+                  // Close the prompt for any error since we know the user rejected it
+                  console.log("Closing add frame prompt due to error");
+                  setIsAddFramePromptOpen(false);
+                }
+              } else {
+                setIsBookmarksModalOpen(true);
+              }
             }}
             className={`w-12 h-12 bg-[#f5f5f5] text-gray-600 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors ${
               isBookmarked ? "text-blue-600" : ""
