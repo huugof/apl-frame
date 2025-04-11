@@ -763,6 +763,8 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
                               setHasAddedFrame(true);
                               setIsAddFramePromptOpen(false);
                               setIsBookmarksModalOpen(true);
+                            } else {
+                              setIsAddFramePromptOpen(false);
                             }
                           } catch (error: any) {
                             console.log("Full error object:", error);
@@ -863,6 +865,8 @@ export default function RandomPattern({ initialPatternId }: RandomPatternProps) 
                     setHasAddedFrame(true);
                     setIsAddFramePromptOpen(false);
                     setIsBookmarksModalOpen(true);
+                  } else {
+                    setIsAddFramePromptOpen(false);
                   }
                 } catch (error: any) {
                   console.log("Full error object:", error);
